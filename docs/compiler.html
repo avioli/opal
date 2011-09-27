@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <title>The Opal Compiler</title>
+
+  <link rel="stylesheet" href="../css/styles.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/syntax.css" type="text/css" media="screen" charset="utf-8">
+</head>
+<body>
+  <div class="content">
+    <header>
+      <nav>
+        <ul>
+          <li><a href="../docs.html">Back to Documentation</a></li>
+        </ul>
+      </nav>
+    </header>
+    <h1 id='the_opal_compiler'>The Opal Compiler</h1>
+
+<p>The compiler included in opal is a source-to-source compiler: it takes ruby code and output javascript code. All code generated depends on the bundled runtime - not just for the core library, but also some runtime functions included in the core runtime files. This is not a VM, but just assistant methods to define classes etc.</p>
+
+<p>Opal also generates code which maintains line numbers for all statements and expressions. This makes it really easy to debug through the generated javascript. Also, advanced debuggers will use these line numbers in stack traces etc to make things extra eash.</p>
+
+<h2 id='the_generated_code'>The generated code</h2>
+
+<p>The opal compiler generates a function which takes three args - the opal runtime, the <code>self</code> value for the generated code (which will almost always be &#8220;top self&#8221;), and the filename the generated code should use. These three arguments are filled in by the runtime when the code is about to be run (in the browser or using therubyracer on the command line).</p>
+
+<h3 id='example_of_a_compiled_file'>Example of a compiled file</h3>
+
+<p>The given ruby code:</p>
+<div class='highlight'><pre><code class='ruby'><span class='nb'>puts</span> <span class='mi'>1</span><span class='p'>,</span> <span class='mi'>2</span><span class='p'>,</span> <span class='mi'>3</span>
+</code></pre>
+</div>
+<p>Will compile into (something like) the following javascript:</p>
+<div class='highlight'><pre><code class='javascript'><span class='c1'>// $rb = opal runtime</span>
+<span class='c1'>// self = self value</span>
+<span class='c1'>// __FILE__ = current filename</span>
+<span class='kd'>function</span><span class='p'>(</span><span class='nx'>$rb</span><span class='p'>,</span> <span class='nx'>self</span><span class='p'>,</span> <span class='nx'>__FILE__</span><span class='p'>)</span> <span class='p'>{</span>
+  <span class='c1'>// actual file implementation</span>
+  <span class='kd'>function</span> <span class='nx'>$$</span><span class='p'>()</span> <span class='p'>{</span>
+    <span class='k'>return</span> <span class='nx'>self</span><span class='p'>.</span><span class='nx'>m$puts</span><span class='p'>(</span><span class='mi'>1</span><span class='p'>,</span> <span class='mi'>2</span><span class='p'>,</span> <span class='mi'>3</span><span class='p'>);</span>
+  <span class='p'>}</span>
+
+  <span class='kd'>var</span> <span class='nx'>nil</span> <span class='o'>=</span> <span class='nx'>$rb</span><span class='p'>.</span><span class='nx'>Qnil</span><span class='p'>,</span> <span class='nx'>$class</span> <span class='o'>=</span> <span class='nx'>$rb</span><span class='p'>.</span><span class='nx'>dc</span><span class='p'>,</span> <span class='nx'>$defn</span> <span class='o'>=</span> <span class='nx'>$rb</span><span class='p'>.</span><span class='nx'>dm</span><span class='p'>;</span>
+  <span class='k'>return</span> <span class='nx'>$$</span><span class='p'>();</span>
+<span class='p'>}</span>
+</code></pre>
+</div>
+<p>The outermost function is the one previously mentioned - opal simple, when required, will pass the relevant args to this function to execute. The inner function <code>$$</code> is the body of the file. This is where all the code actually goes. It is wrapped so that is can be called after all the variables below it can be initialized. The variables are not defined first as it will add a lot of line noise which makes it hard to debug.</p>
+
+<p>Below the function we define the variables needed for the file - these are all taken from the runtime and include <code>nil</code>, <code>$class</code> for defining classes and <code>$defn</code> for defining methods. There are a few more but they are ommitted to keep the example simple.</p>
+
+<p>The final line <code>return $$()</code> simply runs the body and returns the value. This value is mostly ignored, but it is useful for REPLs (for instance).</p>
+
+<h2 id='compiling_object_literals'>Compiling object literals</h2>
+
+<h3 id='self'>self</h3>
+
+<p>In the generated code, the <code>self</code> variable is always generated as just that - self. This is defined by the given value in the outer-most function above. When entering into a class definition, method body or block body, the value of self is redefined. See the relevant section below for more. Note: self always compiles to the &#8220;self&#8221; variable.</p>
+
+<h3 id='nil'>nil</h3>
+
+<p><code>nil</code> in opal is a true ruby object and does not simply fall back to <code>null</code> or <code>undefined</code>. This allows it to respond to messages just like in ruby. Nil always compiles to the nil variable which is also defined within the top level function.</p>
+
+<h3 id='true_and_false'>true and false</h3>
+
+<p>In Opal the <code>Boolean</code> class is used instead of seperate <code>TrueClass</code> and <code>FalseClass</code> allowing native javascript <code>true</code> and <code>false</code> values to be used.</p>
+
+<h3 id='numbers'>Numbers</h3>
+
+<p>In Opal the only numerical class is <code>Numeric</code> which represents both integers and floats. This is a result of only a single numeric type in javascript, so keeping to a single class for numbers improves efficiency. Numbers in opal compile directly into number literals in javascript.</p>
+
+<h3 id='strings'>Strings</h3>
+
+<p>Strings in opal compile directly into javascript string literals. Because of this all strings in opal are immutable, so some mutating string methods are ommitted from opal.</p>
+
+<h3 id='symbols'>Symbols</h3>
+
+<p>The symbol syntax in opal is maintained, but there is no symbol class. Symbols compile directly into string literals as their speed benefit is lost in javascript and they would actually make the runtime slower.</p>
+
+<h3 id='arrays'>Arrays</h3>
+
+<p>Opal arrays also compile directly into javascript array literals. This feature is very useful when dealing with splat method calls and splat arguments in blocks and method definitions.</p>
+
+<h3 id='hash'>Hash</h3>
+
+<p>Hash literals compile into a function call that returns a new hash instance. Hashes in opal are true ruby objects so the allocator method adds each key/value pair into its internals. This compiles as follows:</p>
+<div class='highlight'><pre><code class='javascript'><span class='nx'>$hash</span><span class='p'>(</span><span class='s2'>&quot;key1&quot;</span><span class='p'>,</span> <span class='s2'>&quot;value1&quot;</span><span class='p'>,</span> <span class='s2'>&quot;key2&quot;</span><span class='p'>,</span> <span class='s2'>&quot;value2&quot;</span><span class='p'>)</span>
+</code></pre>
+</div>
+<p>where <code>$hash</code> is defined in the outer function as a property retrieved from the runtime.</p>
+
+<h2 id='compiling_ruby_methods'>Compiling Ruby methods</h2>
+
+<p>Opal makes use of prototypes for inheriting and method storage. When a method is defined on a receiver, it has a &#8216;m$&#8217; prefix - this stops ruby methods conflicting with native functions and properties on a receiver (like arrays for instance which are just native js arrays). Opal maintains method names, evern for methods which are invalid as javascript identifiers, so some method names need to be wrapped inside a property accessor.</p>
+
+<h3 id='method_calls'>Method calls</h3>
+
+<p>The following three ruby calls:</p>
+<div class='highlight'><pre><code class='ruby'><span class='n'>do_something</span> <span class='mi'>1</span><span class='p'>,</span> <span class='mi'>2</span><span class='p'>,</span> <span class='mi'>3</span>
+<span class='nb'>self</span><span class='o'>.</span><span class='n'>length</span>
+<span class='nb'>self</span><span class='o'>.</span><span class='n'>title</span> <span class='o'>=</span> <span class='s2'>&quot;adam&quot;</span>
+<span class='nb'>self</span><span class='o'>.</span><span class='n'>loaded?</span>
+</code></pre>
+</div>
+<p>compile into the following javascript:</p>
+<div class='highlight'><pre><code class='javascript'><span class='nx'>self</span><span class='p'>.</span><span class='nx'>m$do_something</span><span class='p'>(</span><span class='mi'>1</span><span class='p'>,</span> <span class='mi'>2</span><span class='p'>,</span> <span class='mi'>3</span><span class='p'>)</span>
+<span class='nx'>self</span><span class='p'>.</span><span class='nx'>m$length</span><span class='p'>()</span>
+<span class='nx'>self</span><span class='p'>[</span><span class='s1'>&#39;m$title=&#39;</span><span class='p'>](</span><span class='s2'>&quot;adam&quot;</span><span class='p'>)</span>
+<span class='nx'>self</span><span class='p'>[</span><span class='s1'>&#39;m$loaded?&#39;</span><span class='p'>]()</span>
+</code></pre>
+</div>
+<p>Splat method call are also fully supported, and compile the following ruby:</p>
+<div class='highlight'><pre><code class='ruby'><span class='nb'>puts</span> <span class='o'>*[</span><span class='mi'>1</span><span class='p'>,</span> <span class='mi'>2</span><span class='p'>,</span> <span class='mi'>3</span><span class='o'>]</span>
+</code></pre>
+</div>
+<p>into the somewhat ugly:</p>
+<div class='highlight'><pre><code class='javascript'><span class='nx'>self</span><span class='p'>.</span><span class='nx'>m$puts</span><span class='p'>.</span><span class='nx'>apply</span><span class='p'>(</span><span class='nx'>self</span><span class='p'>,</span> <span class='p'>[</span><span class='mi'>1</span><span class='p'>,</span> <span class='mi'>2</span><span class='p'>,</span> <span class='mi'>3</span><span class='p'>])</span>
+</code></pre>
+</div>
+<h4 id='blocks'>Blocks</h4>
+
+<p>Blocks are not regular method arguments in ruby, so they are not treated as so in opal. To send a method a block, there is a special &#8216;$B&#8217; variable on the runtime that holds the current block function and proc. The block function is the literal function (method) that the block is sent to. Before calling a method, the function is noted. The proc is the actual block implementation which is just a regular function.</p>
+
+<p>For example, the ruby call:</p>
+<div class='highlight'><pre><code class='ruby'><span class='nb'>self</span><span class='o'>.</span><span class='n'>method</span> <span class='k'>do</span>
+  <span class='kp'>nil</span>
+<span class='k'>end</span>
+</code></pre>
+</div>
+<p>is compiled into (something like) the following:</p>
+<div class='highlight'><pre><code class='javascript'><span class='p'>(</span><span class='nx'>$B</span><span class='p'>.</span><span class='nx'>p</span> <span class='o'>=</span> <span class='kd'>function</span><span class='p'>()</span> <span class='p'>{</span> <span class='k'>return</span> <span class='nx'>nil</span><span class='p'>;</span> <span class='p'>},</span> <span class='c1'>// the proc</span>
+ <span class='nx'>$B</span><span class='p'>.</span><span class='nx'>f</span> <span class='o'>=</span> <span class='nx'>self</span><span class='p'>.</span><span class='nx'>m$method</span>               <span class='c1'>// the method/function receiver</span>
+<span class='p'>).</span><span class='nx'>call</span><span class='p'>()</span>                            <span class='c1'>// call the method</span>
+</code></pre>
+</div>
+<p>The receiver method is responsible for looking up the block to see if one was sent to it.</p>
+
+<p>The process is similar for <code>&amp;block</code> args in the method parameter list.</p>
+
+<h3 id='method_definitions'>Method definitions</h3>
+
+<p>Ruby methods are implemented as regular javascript functions. The runtime offers two functions to define a method: <code>dm</code> for defining a regular method and <code>ds</code> to define a singleton method which automatically creates a singleton class as needed (if needed).</p>
+
+<p>A very simple ruby method:</p>
+<div class='highlight'><pre><code class='ruby'><span class='k'>def</span> <span class='nf'>to_s</span>
+  <span class='s2'>&quot;main&quot;</span>
+<span class='k'>end</span>
+</code></pre>
+</div>
+<p>is compiled into the following javascript:</p>
+<div class='highlight'><pre><code class='javascript'><span class='nx'>$defn</span><span class='p'>(</span><span class='nx'>self</span><span class='p'>,</span> <span class='s1'>&#39;to_s&#39;</span><span class='p'>,</span> <span class='kd'>function</span><span class='p'>()</span> <span class='p'>{</span> <span class='kd'>var</span> <span class='nx'>self</span> <span class='o'>=</span> <span class='k'>this</span><span class='p'>;</span>
+  <span class='k'>return</span> <span class='s2'>&quot;main&quot;</span><span class='p'>;</span>
+<span class='p'>});</span>
+</code></pre>
+</div>
+<p><code>$defn</code> is a local variable, set in the outer function, that points to <code>dm</code>. There is also <code>$defs</code> used for defining the singletons. The first argument is the receiver, which is always self for normal methods, or will be the receiver for singleton methods. The second arg is the method name, and the third is the implementation.</p>
+
+<p>It is also obvious that <code>self</code> here is set to <code>this</code>, which is the object receiver. The singleton version of this function would be identical except for the receiver.</p>
+
+<h4 id='handling_blocks'>Handling blocks</h4>
+
+<p>A method is said to handle a block if it either calls <code>yield</code> in its body, uses <code>block\_given?</code> or defines a block as its last argument, with <code>&amp;</code>. If a method handles a block it will always check the previously mentioned runtime property to see if the block function is the callee. If it is, the method gets the block and sets both properties to nil. It must set both properties to nil to avoid the next call to the method from receiving the block as a false posotive. The block is then just a native function, so is called as appropriate.</p>
+
+<h2 id='compiling_class_and_module_definitions'>Compiling class and module definitions</h2>
+  </div>
+</body>
+</html>
+

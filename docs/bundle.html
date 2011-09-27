@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <title>Bundle class</title>
+
+  <link rel="stylesheet" href="../css/styles.css" type="text/css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="../css/syntax.css" type="text/css" media="screen" charset="utf-8">
+</head>
+<body>
+  <div class="content">
+    <header>
+      <nav>
+        <ul>
+          <li><a href="../docs.html">Back to Documentation</a></li>
+        </ul>
+      </nav>
+    </header>
+    <h1 id='bundle_class'>Bundle class</h1>
+
+<p>The <code>Bundle</code> class and its associated <code>BundleTask</code> class are the easiest way to build ruby source files ready to use in the browser. It basically looks in the current directories <code>lib/</code> folder for all ruby source files, then compiles them all and bundles them together into a single javascript output file.</p>
+
+<h2 id='setting_up'>Setting up</h2>
+
+<p>To get bundling working, you need a Rakefile with a <code>bundle</code> task. This can be manually setup, but the easiest way is to use the <code>init</code> command from opal. To create a test project, run:</p>
+
+<pre><code>$ opal init test_project</code></pre>
+
+<p>and replace &#8220;test_project&#8221; with the name of your application. This will place all generated files into a directory of the same name. If you ommit the project name then the files will be placed in the current working directory.</p>
+
+<p>You should end up with the given project structure:</p>
+
+<pre><code>test_project
+|-- js
+|   |-- opal.js
+|   `-- opal-parser.js
+|-- lib
+|   `-- test_project.rb
+|-- index.html
+`-- Rakefile</code></pre>
+
+<h3 id='js_folder'>js folder</h3>
+
+<p>This folder contains the prebuilt versions of the opal runtime and the opal parser.</p>
+
+<h3 id='lib_folder'>lib folder</h3>
+
+<p>This is where all your ruby code goes. It already has a template ruby file which just prints a message.</p>
+
+<h3 id='indexhtml'>index.html</h3>
+
+<p>Simple html document which will load the opal runtime and your built project file.</p>
+
+<h3 id='rakefile'>Rakefile</h3>
+
+<p>Simple rakefile that has the task to build the bundle. It can be customized (see below).</p>
+
+<h2 id='building_the_project'>Building the project</h2>
+
+<p>Although the application doesn&#8217;t do much, it is ready to be built and run. To do this, run:</p>
+
+<pre><code>$ rake bundle</code></pre>
+
+<p>This will generate a file called <code>test\_project-0.0.1.js</code> in the current directory. The name will vary if you change the values in the Rakefile.</p>
+
+<p>Once built, open index.html in any browser and observe its debug log. You should see the message printed there. Everytime you edit the ruby sources you will need to re-run this rake task to rebuild the bundle.</p>
+
+<p>If you observe the built file, you can see that <code>Bundle</code> just compiles the ruby sources, it does not require them automatically. There is a small snippet inside the html document that does this:</p>
+<div class='highlight'><pre><code class='html'><span class='nt'>&lt;script </span><span class='na'>type=</span><span class='s'>&quot;javascript&quot;</span><span class='nt'>&gt;</span>
+  <span class='nx'>opal</span><span class='p'>.</span><span class='nx'>require</span><span class='p'>(</span><span class='s2'>&quot;test_project&quot;</span><span class='p'>);</span>
+<span class='nt'>&lt;/script&gt;</span>
+</code></pre>
+</div>
+  </div>
+</body>
+</html>
+
