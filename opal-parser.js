@@ -60,7 +60,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
 
 
 
-      $defn(self, 'fix_line_number', function(opts, line) { var self = this;var code, target, __a, current, __b;if (line == undefined) {line = nil;}if (self.line == undefined) { self.line = nil; }
+      $defn(self, 'fix_line_number', function(opts, line) { var self = this;var code, target, __a, current, __b;if (line == undefined) {line = nil;}
         code = '';
 
         target = (((__a = line), __a != false && __a != nil) ? __a : self.line);
@@ -104,7 +104,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
 
       self.m$attr_reader('variables');
 
-      self.m$attr_reader('parent');
+      self.m$attr_accessor('parent');
 
       $defn(self, 'initialize', function(parent, statements) { var self = this;
         self.parent = parent;
@@ -124,33 +124,29 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.while_scope_stack = [];
       });
 
-      $defn(self, 'push_while_scope', function(while_scope) { var self = this;if (self.while_scope_stack == undefined) { self.while_scope_stack = nil; }if (self.while_scope == undefined) { self.while_scope = nil; }
+      $defn(self, 'push_while_scope', function(while_scope) { var self = this;
         self.while_scope_stack['m$<<'](while_scope);
         return self.while_scope = self.while_scope['m$+'](1);
       });
 
-      $defn(self, 'pop_while_scope', function() { var self = this;if (self.while_scope_stack == undefined) { self.while_scope_stack = nil; }if (self.while_scope == undefined) { self.while_scope = nil; }
+      $defn(self, 'pop_while_scope', function() { var self = this;
         self.while_scope_stack.m$pop();
         return self.while_scope = self.while_scope['m$-'](1);
       });
 
-      $defn(self, 'in_while_scope?', function() { var self = this;if (self.while_scope == undefined) { self.while_scope = nil; }
+      $defn(self, 'in_while_scope?', function() { var self = this;
         return self.while_scope > 0;
       });
 
-      $defn(self, 'while_scope', function() { var self = this;if (self.while_scope_stack == undefined) { self.while_scope_stack = nil; }
+      $defn(self, 'while_scope', function() { var self = this;
         return self.while_scope_stack.m$last();
       });
 
-      $defn(self, 'ensure_ivar', function(name) { var self = this;var __a;if (self.ivars == undefined) { self.ivars = nil; }
-        if(!((__a = self.ivars['m$include?'](name), __a !== false && __a !== nil))) {return self.ivars['m$<<'](name)} else { return nil; };
-      });
-
-      $defn(self, 'param_variable', function(name) { var self = this;if (self.variables == undefined) { self.variables = nil; }
+      $defn(self, 'param_variable', function(name) { var self = this;
         return self.variables['m$<<'](name);
       });
 
-      $defn(self, 'ensure_variable', function(name) { var self = this;var variable, __a;if (self.scope_vars == undefined) { self.scope_vars = nil; }if (self.variables == undefined) { self.variables = nil; }
+      $defn(self, 'ensure_variable', function(name) { var self = this;var variable, __a;
         variable = self.m$find_variable(name);
         if ((__a = variable, __a !== false && __a !== nil)) {          return variable;}
 
@@ -175,7 +171,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return nil;
       });
 
-      $defn(self, 'temp_local', function() { var self = this;var __a, name;if (self.temp_queue == undefined) { self.temp_queue = nil; }if (self.temp_current == undefined) { self.temp_current = nil; }if (self.scope_vars == undefined) { self.scope_vars = nil; }
+      $defn(self, 'temp_local', function() { var self = this;var __a, name;
         if ((__a = self.temp_queue.m$last(), __a !== false && __a !== nil)) {          return self.temp_queue.m$pop();}
 
         name = '__' + self.temp_current;
@@ -184,17 +180,17 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return name;
       });
 
-      $defn(self, 'queue_temp', function(temp) { var self = this;if (self.temp_queue == undefined) { self.temp_queue = nil; }
+      $defn(self, 'queue_temp', function(temp) { var self = this;
         return self.temp_queue['m$<<'](temp);
       });
 
-      $defn(self, 'set_uses_block', function() { var self = this;var __a;if (self.block_arg_name == undefined) { self.block_arg_name = nil; }
+      $defn(self, 'set_uses_block', function() { var self = this;var __a;
         if ((__a = self.block_arg_name, __a !== false && __a !== nil)) {          return self.block_arg_name;}
 
         return self.block_arg_name = '__block__';
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var stmts, vars;if (self.statements == undefined) { self.statements = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var stmts, vars;
         stmts = self.statements.m$generate(opts, level);
         vars = '';
 
@@ -233,19 +229,23 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.method_missing = (((__a = opts['m$[]']('method_missing')), __a != false && __a != nil) ? __a : false);
       });
 
-      $defn(self, 'overload_arithmetic?', function() { var self = this;if (self.overload_arithmetic == undefined) { self.overload_arithmetic = nil; }        return self.overload_arithmetic;});
+      $defn(self, 'overload_arithmetic?', function() { var self = this;        return self.overload_arithmetic;});
 
-      $defn(self, 'overload_comparison?', function() { var self = this;if (self.overload_comparison == undefined) { self.overload_comparison = nil; }        return self.overload_comparison;});
+      $defn(self, 'overload_comparison?', function() { var self = this;        return self.overload_comparison;});
 
-      $defn(self, 'overload_bitwise?', function() { var self = this;if (self.overload_bitwise == undefined) { self.overload_bitwise = nil; }        return self.overload_bitwise;});
+      $defn(self, 'overload_bitwise?', function() { var self = this;        return self.overload_bitwise;});
 
-      $defn(self, 'overload_shift?', function() { var self = this;if (self.overload_shift == undefined) { self.overload_shift = nil; }        return self.overload_shift;});
+      $defn(self, 'overload_shift?', function() { var self = this;        return self.overload_shift;});
 
-      $defn(self, 'overload_equal?', function() { var self = this;if (self.overload_equal == undefined) { self.overload_equal = nil; }        return self.overload_equal;});
+      $defn(self, 'overload_equal?', function() { var self = this;        return self.overload_equal;});
 
-      $defn(self, 'method_missing?', function() { var self = this;if (self.method_missing == undefined) { self.method_missing = nil; }        return self.method_missing;});
+      $defn(self, 'method_missing?', function() { var self = this;        return self.method_missing;});
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, pre, post, __a, __b;if (self.statements == undefined) { self.statements = nil; }if (self.scope_vars == undefined) { self.scope_vars = nil; }if (self.ivars == undefined) { self.ivars = nil; }
+      $defn(self, 'ensure_ivar', function(name) { var self = this;var __a;
+        if(!((__a = self.ivars['m$include?'](name), __a !== false && __a !== nil))) {return self.ivars['m$<<'](name)} else { return nil; };
+      });
+
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, pre, post, __a;
         self.opts = opts;
         code = [];
         self.statements.m$returns();
@@ -267,15 +267,9 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         post = post['m$+'](';');
 
 
-        (__a = self.ivars, $B.f = __a.m$each, ($B.p =function(ivar) { var self = this; var __a, ivar_name;
-          if ((__a = self.m$js_reserved_words()['m$include?'](ivar), __a !== false && __a !== nil)) {
-            ivar_name = ("self['" + (ivar).m$to_s() + "']");
-          } else {
-            ivar_name = ("self." + (ivar).m$to_s());
-          }
-
-          return post = post['m$+'](((ivar_name).m$to_s() + "===undefined&&(" + (ivar_name).m$to_s() + "=nil);"));
-        }).$self=self, $B.f).call(__a);
+        if (!(__a = self.ivars['m$empty?'](), __a !== false && __a !== nil)) {
+          post = post['m$+'](("$rb.iv(" + (self.ivars.m$inspect()).m$to_s() + ");"));
+        }
 
         post = post['m$+']("return $$();\n");
         post = post['m$+']("}");
@@ -294,7 +288,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.nodes = nodes;
       });
 
-      $defn(self, 'returns', function() { var self = this;if (self.nodes == undefined) { self.nodes = nil; }
+      $defn(self, 'returns', function() { var self = this;
         if (self.nodes.m$length() > 0) {
           return self.nodes['m$[]='](-1, self.nodes['m$[]'](-1).m$returns());
         } else {
@@ -302,7 +296,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         }
       });
 
-      $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, __b;if (self.nodes == undefined) { self.nodes = nil; }
+      $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, __b;
         code = [];
 
         if ((__a = self.nodes['m$empty?'](), __a !== false && __a !== nil)) {          return $cg(self, 'NilNode').m$new().m$generate(opts, level);}
@@ -336,7 +330,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
       });
 
 
-      $defn(self, '<<', function(node) { var self = this;if (self.nodes == undefined) { self.nodes = nil; }
+      $defn(self, '<<', function(node) { var self = this;
         self.nodes['m$<<'](node);
         return self;
       });
@@ -365,7 +359,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.value = val['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.value == undefined) { self.value = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return self.value.m$to_s();
       });
         }, 0);
@@ -377,7 +371,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.value = val['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.value == undefined) { self.value = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return ("'" + (self.value).m$to_s() + "'");
       });
         }, 0);
@@ -405,7 +399,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return '.' + id;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, __b, code, arg_res, recv, mid, dispatch, args, tmp_recv, block, splat, splat_args, result;if (self.recv == undefined) { self.recv = nil; }if (self.mid == undefined) { self.mid = nil; }if (self.args == undefined) { self.args = nil; }if (self.block == undefined) { self.block = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, __b, code, arg_res, recv, mid, dispatch, args, tmp_recv, block, splat, splat_args, result;
 
         if ((__a = (((__b = self.recv['m$is_a?']($cg(self, 'NumericNode'))), __b != false && __b != nil) ? self.mid.valueOf() === '-@'.valueOf() : __b), __a !== false && __a !== nil)) {
           self.recv['m$value='](("-" + (self.recv.m$value()).m$to_s()));
@@ -570,7 +564,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = _end['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, scope, stmt;if (self.base == undefined) { self.base = nil; }if (self.class_name == undefined) { self.class_name = nil; }if (self.statements == undefined) { self.statements = nil; }if (self.scope_vars == undefined) { self.scope_vars = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, scope, stmt;
         code = '$class(';
 
 
@@ -594,10 +588,12 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         stmt = self.statements.m$generate(scope, $cg(self, 'LEVEL_TOP'));
 
         if ((__a = self.scope_vars['m$empty?'](), __a !== false && __a !== nil)) {
-          code = code['m$+'](('function(self) { ' + stmt));
+          code = code['m$+']('function(self) { ');
         } else {
-          code = code['m$+'](("function(self) {var " + (self.scope_vars.m$join(', ')).m$to_s() + ";" + (stmt).m$to_s()));
+          code = code['m$+'](("function(self) {var " + (self.scope_vars.m$join(', ')).m$to_s() + ";"));
         }
+
+        code = code['m$+'](stmt);
 
 
         code = code['m$+'](self.m$fix_line_number(opts, self.end_line));
@@ -618,7 +614,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = _end['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, scope, stmt;if (self.base == undefined) { self.base = nil; }if (self['super'] == undefined) { self['super'] = nil; }if (self.cls_name == undefined) { self.cls_name = nil; }if (self.statements == undefined) { self.statements = nil; }if (self.scope_vars == undefined) { self.scope_vars = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, scope, stmt;
         code = '$class(';
 
 
@@ -638,10 +634,12 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         stmt = self.statements.m$generate(scope, level);
 
         if ((__a = self.scope_vars['m$empty?'](), __a !== false && __a !== nil)) {
-          code = code['m$+'](("function(self) {" + (stmt).m$to_s()));
+          code = code['m$+']("function(self) {");
         } else {
-          code = code['m$+'](("function(self) { var " + (self.scope_vars.m$join(', ')).m$to_s() + ";" + (stmt).m$to_s()));
+          code = code['m$+'](("function(self) { var " + (self.scope_vars.m$join(', ')).m$to_s() + ";"));
         }
+
+        code = code['m$+'](stmt);
 
 
         code = code['m$+'](self.m$fix_line_number(opts, self.end_line));
@@ -660,7 +658,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = endn['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, scope, stmt, __a;if (self.expr == undefined) { self.expr = nil; }if (self.statements == undefined) { self.statements = nil; }if (self.scope_vars == undefined) { self.scope_vars = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, scope, stmt, __a;
         code = '$class(';
 
 
@@ -699,7 +697,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = endn['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, code, method_args, pre_code, scope, args, __b, arity, stmt, block_code;if (self.singleton == undefined) { self.singleton = nil; }if (self.fname == undefined) { self.fname = nil; }if (self.args == undefined) { self.args = nil; }if (self.body == undefined) { self.body = nil; }if (self.scope_vars == undefined) { self.scope_vars = nil; }if (self.ivars == undefined) { self.ivars = nil; }if (self.block_arg_name == undefined) { self.block_arg_name = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, code, method_args, pre_code, scope, args, __b, arity, stmt, block_code;
         if ((__a = self.singleton, __a !== false && __a !== nil)) {
           code = ("$defs(" + (self.singleton.m$generate(opts, level)).m$to_s() + ", ");
         } else {
@@ -716,6 +714,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
 
 
         scope = $hash('indent', opts['m$[]']('indent') + $cg(self, 'INDENT'), 'top', opts['m$[]']('top'), 'scope', self);
+        self['m$parent='](opts['m$[]']('scope'));
 
         args = self.args;
 
@@ -774,17 +773,6 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         }
 
 
-        (__a = self.ivars, $B.f = __a.m$each, ($B.p =function(ivar) { var self = this; var __a, ivar_name;
-          if ((__a = self.m$js_reserved_words()['m$include?'](ivar), __a !== false && __a !== nil)) {
-            ivar_name = ("self['" + (ivar).m$to_s() + "']");
-          } else {
-            ivar_name = ("self." + (ivar).m$to_s());
-          }
-
-          return pre_code = pre_code['m$+'](("if (" + (ivar_name).m$to_s() + " == undefined) { " + (ivar_name).m$to_s() + " = nil; }"));
-        }).$self=self, $B.f).call(__a);
-
-
         if ((__a = self.block_arg_name, __a !== false && __a !== nil)) {
 
           block_code = "var $y = $B, $yy, $ys, $yb = $y.b;";
@@ -816,11 +804,11 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.line = stmt.m$line();
       });
 
-      $defn(self, 'returns', function() { var self = this;if (self.statements == undefined) { self.statements = nil; }
+      $defn(self, 'returns', function() { var self = this;
         return self.statements.m$returns();
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.statements == undefined) { self.statements = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return self.statements.m$generate(opts, level);
       });
         }, 0);
@@ -833,7 +821,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.rhs = rhs;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var res, tmp;if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var res, tmp;
         res = '((';
         tmp = opts['m$[]']('scope').m$temp_local();
         res = res['m$+'](("(" + (tmp).m$to_s() + " = " + (self.lhs.m$generate(opts, $cg(self, 'LEVEL_LIST'))).m$to_s() + "), " + (tmp).m$to_s() + " != false && " + (tmp).m$to_s() + " != nil) ? "));
@@ -851,7 +839,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.rhs = rhs;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var res, tmp;if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var res, tmp;
         res = '((';
         tmp = opts['m$[]']('scope').m$temp_local();
         res = res['m$+'](("(" + (tmp).m$to_s() + " = " + (self.lhs.m$generate(opts, $cg(self, 'LEVEL_LIST'))).m$to_s() + "), " + (tmp).m$to_s() + " != false && " + (tmp).m$to_s() + " != nil) ? "));
@@ -871,7 +859,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
 
 
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b, code, res;if (self.args == undefined) { self.args = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b, code, res;
         parts = (__a = self.args['m$[]'](0), $B.f = __a.m$map, ($B.p =function(arg) { var self = this;          return arg.m$process(opts, $cg(self, 'LEVEL_LIST'));}).$self=self, $B.f).call(__a);
         code = ("[" + (parts.m$join(', ')).m$to_s() + (self.m$fix_line_number(opts, self.end_line)).m$to_s() + "]");
 
@@ -893,7 +881,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.parts = parts;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.parts == undefined) { self.parts = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         parts = (__a = self.parts.m$flatten(), $B.f = __a.m$map, ($B.p =function(part) { var self = this;          return part.m$process(opts, $cg(self, 'LEVEL_LIST'));}).$self=self, $B.f).call(__a);
         return ("$hash(" + (parts.m$join(', ')).m$to_s() + (self.m$fix_line_number(opts, self.end_line)).m$to_s() + ")");
       });
@@ -910,7 +898,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.tail = tail;
       });
 
-      $defn(self, 'returns', function() { var self = this;var __a, __b;if (self.stmt == undefined) { self.stmt = nil; }if (self.tail == undefined) { self.tail = nil; }
+      $defn(self, 'returns', function() { var self = this;var __a, __b;
         self.stmt.m$returns();
 
         (__a = self.tail, $B.f = __a.m$each, ($B.p =function(tail) { var self = this;
@@ -923,11 +911,11 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self;
       });
 
-      $defn(self, 'expression?', function() { var self = this;if (self.expr_level == undefined) { self.expr_level = nil; }
+      $defn(self, 'expression?', function() { var self = this;
         return self.expr_level;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, done_else, tail, old_indent, stmt_level, expr, __a, __b;if (self.expr == undefined) { self.expr = nil; }if (self.type == undefined) { self.type = nil; }if (self.stmt == undefined) { self.stmt = nil; }if (self.tail == undefined) { self.tail = nil; }if (self.force_else == undefined) { self.force_else = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, done_else, tail, old_indent, stmt_level, expr, __a, __b;
         code = '';
         done_else = false;
         tail = nil;
@@ -990,7 +978,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = endn['m$[]']('line');
       });
 
-      $defn(self, 'returns', function() { var self = this;var __a, __b;if (self.body == undefined) { self.body = nil; }
+      $defn(self, 'returns', function() { var self = this;var __a, __b;
         (__a = self.body, $B.f = __a.m$each, ($B.p =function(part) { var self = this;
           if (part['m$[]'](0)['m$[]']('value').valueOf() === 'when'.valueOf()) {
             return part['m$[]'](2).m$returns();
@@ -1001,7 +989,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, done_else, tail, old_indent, stmt_level, expr, case_ref, __a, __b;if (self.expr == undefined) { self.expr = nil; }if (self.body == undefined) { self.body = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, done_else, tail, old_indent, stmt_level, expr, case_ref, __a, __b;
         code = '';
         done_else = false;
         tail = nil;
@@ -1057,7 +1045,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.line = 0;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.val == undefined) { self.val = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return self.val;
       });
         }, 0);
@@ -1069,11 +1057,11 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.name = name['m$[]']('value');
       });
 
-      $defn(self, 'value', function() { var self = this;if (self.name == undefined) { self.name = nil; }
+      $defn(self, 'value', function() { var self = this;
         return self.name;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.name == undefined) { self.name = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return ("$cg(" + ($cg(self, 'SelfNode').m$new().m$generate(opts, level)).m$to_s() + ", '" + (self.name).m$to_s() + "')");
       });
         }, 0);
@@ -1086,7 +1074,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.name = name['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.lhs == undefined) { self.lhs = nil; }if (self.name == undefined) { self.name = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
 
         return ("$cg(" + (self.lhs.m$generate(opts, level)).m$to_s() + ", '" + (self.name).m$to_s() + "')");
       });
@@ -1099,7 +1087,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.name = name['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.name == undefined) { self.name = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return ("rm_vm_cg($opal.Object, '" + (self.name).m$to_s() + "')");
       });
         }, 0);
@@ -1112,7 +1100,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.rhs = rhs;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, ivar_name, ivar_rhs, __b;if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }if (self.line == undefined) { self.line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, ivar_name, ivar_rhs, __b;
         if ((__a = self.lhs['m$is_a?']($cg(self, 'IvarNode')), __a !== false && __a !== nil)) {
           ivar_name = self.lhs.m$value().m$slice(1, self.lhs.m$value().m$length());
           ivar_rhs = self.rhs.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
@@ -1158,13 +1146,13 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.rhs = rhs;
       });
 
-      $defn(self, 'generate', function(opts, level) { var self = this;if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }
+      $defn(self, 'generate', function(opts, level) { var self = this;
         self.lhs.m$inspect();
         self.generator_opts = opts;
         return '(' + self.m$generate_mlhs_context(self.lhs, self.rhs) + ')';
       });
 
-      return $defn(self, 'generate_mlhs_context', function(arr, rhs) { var self = this;var parts, tmp_recv, tmp_len, rhs_code, __a, __b;if (self.generator_opts == undefined) { self.generator_opts = nil; }
+      return $defn(self, 'generate_mlhs_context', function(arr, rhs) { var self = this;var parts, tmp_recv, tmp_len, rhs_code, __a, __b;
         self.m$puts(("mlhs node at " + "#@line"));
         parts = [];
 
@@ -1207,7 +1195,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.asgn = asgn['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var assign, __a;if (self.asgn == undefined) { self.asgn = nil; }if (self.line == undefined) { self.line = nil; }if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var assign, __a;
         assign = nil;
 
         if (self.asgn.valueOf() === '||'.valueOf()) {
@@ -1230,9 +1218,9 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.value = val['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var var_name, __a;if (self.value == undefined) { self.value = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var var_name, __a;
         var_name = self.value.m$slice(1, self.value.m$length());
-        opts['m$[]']('scope').m$ensure_ivar(var_name);
+        opts['m$[]']('top').m$ensure_ivar(var_name);
 
         if ((__a = self.m$js_reserved_words()['m$include?'](var_name), __a !== false && __a !== nil)) {          return ("self['" + (var_name).m$to_s() + "']");}
         return ("self." + (var_name).m$to_s());
@@ -1248,7 +1236,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.value = val['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.value == undefined) { self.value = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return ("$rb.cvg('" + (self.value).m$to_s() + "')");
       });
         }, 0);
@@ -1261,11 +1249,11 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.value = val['m$[]']('value');
       });
 
-      $defn(self, 'local_variable?', function(opts) { var self = this;var __a;if (self.value == undefined) { self.value = nil; }
+      $defn(self, 'local_variable?', function(opts) { var self = this;var __a;
         return ((__a = opts['m$[]']('scope').m$find_variable(self.value), __a !== false && __a !== nil) ? true : false);
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var __a;if (self.value == undefined) { self.value = nil; }if (self.line == undefined) { self.line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var __a;
         if ((__a = opts['m$[]']('scope').m$find_variable(self.value), __a !== false && __a !== nil)) {
           return self.value;
         } else {
@@ -1281,7 +1269,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.line = val.m$line();
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.value == undefined) { self.value = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return ("return " + (self.value.m$generate(opts, level)).m$to_s());
       });
         }, 0);
@@ -1294,7 +1282,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.join = endn['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.parts == undefined) { self.parts = nil; }if (self.join == undefined) { self.join = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         if (self.parts.m$length().valueOf() === (0).valueOf()) {
           return "''";
         } else if (self.parts.m$length().valueOf() === (1).valueOf()) {
@@ -1327,7 +1315,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.rhs = rhs;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var lhs, rhs, __a;if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }if (self.op == undefined) { self.op = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var lhs, rhs, __a;
         lhs = self.lhs.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
         rhs = self.rhs.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
 
@@ -1352,7 +1340,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.rhs = rhs;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var lhs, rhs, __a, op;if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }if (self.op == undefined) { self.op = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var lhs, rhs, __a, op;
         lhs = self.lhs.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
         rhs = self.rhs.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
 
@@ -1381,7 +1369,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.rhs = rhs;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var lhs, __a, rhs;if (self.lhs == undefined) { self.lhs = nil; }if (self.rhs == undefined) { self.rhs = nil; }if (self.op == undefined) { self.op = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var lhs, __a, rhs;
         lhs = self.lhs.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
         if ((__a = self.lhs['m$is_a?']($cg(self, 'NumericNode')), __a !== false && __a !== nil)) {          lhs = ("(" + (lhs).m$to_s() + ")");}
         rhs = self.rhs.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
@@ -1414,7 +1402,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.val = val;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var tmp, expr, res;if (self.op == undefined) { self.op = nil; }if (self.val == undefined) { self.val = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var tmp, expr, res;
         if (self.op.valueOf() === '!'.valueOf()) {
           tmp = opts['m$[]']('scope').m$temp_local();
           expr = self.val.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
@@ -1459,7 +1447,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = endn['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var pre_code, code, scope, args, method_args, __a, __b, rest_arg_name, stmt, block_var, block_code;if (self.args == undefined) { self.args = nil; }if (self.stmt == undefined) { self.stmt = nil; }if (self.scope_vars == undefined) { self.scope_vars = nil; }if (self.block_arg_name == undefined) { self.block_arg_name = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var pre_code, code, scope, args, method_args, __a, __b, rest_arg_name, stmt, block_var, block_code;
         self.parent = opts['m$[]']('scope');
         pre_code = '';
         code = '';
@@ -1568,7 +1556,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return false;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.parts == undefined) { self.parts = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         parts = (__a = self.parts, $B.f = __a.m$map, ($B.p =function(part) { var self = this;
           if (part['m$[]'](0).valueOf() === 'string_content'.valueOf()) {
             return part['m$[]'](1)['m$[]']('value');
@@ -1589,7 +1577,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = closing['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.parts == undefined) { self.parts = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         parts = (__a = self.parts.m$nodes(), $B.f = __a.m$map, ($B.p =function(part) { var self = this;
           return part.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
         }).$self=self, $B.f).call(__a);
@@ -1613,7 +1601,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.arefs = arefs;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.recv == undefined) { self.recv = nil; }if (self.line == undefined) { self.line = nil; }if (self.arefs == undefined) { self.arefs = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return $cg(self, 'CallNode').m$new(self.recv, $hash('line', self.line, 'value', '[]'), self.arefs).m$generate(opts, level);
       });
         }, 0);
@@ -1627,7 +1615,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.val = val;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var __a;if (self.arefs == undefined) { self.arefs = nil; }if (self.val == undefined) { self.val = nil; }if (self.recv == undefined) { self.recv = nil; }if (self.line == undefined) { self.line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var __a;
         (((__a = self.arefs['m$[]'](0)), __a != false && __a != nil) ? __a : (self.arefs['m$[]='](0, [])));
         self.arefs['m$[]'](0)['m$<<'](self.val);
         return $cg(self, 'CallNode').m$new(self.recv, $hash('line', self.line, 'value', '[]='), self.arefs).m$generate(opts, level);
@@ -1647,13 +1635,13 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
 
 
 
-      $defn(self, 'returns', function() { var self = this;if (self.stmt == undefined) { self.stmt = nil; }
+      $defn(self, 'returns', function() { var self = this;
         self.returns = true;
         self.stmt = self.stmt.m$returns();
         return self;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, expr, r;if (self.returns == undefined) { self.returns = nil; }if (self.stmt == undefined) { self.stmt = nil; }if (self.expr == undefined) { self.expr = nil; }if (self.type == undefined) { self.type = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var __a, expr, r;
 
         if ((__a = self.returns, __a !== false && __a !== nil)) {          self.stmt.m$returns();}
 
@@ -1676,7 +1664,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
       });
 
 
-      $defn(self, 'yield_code', function(opts) { var self = this;var block_code, parts, __a, __b, code;if (self.args == undefined) { self.args = nil; }
+      $defn(self, 'yield_code', function(opts) { var self = this;var block_code, parts, __a, __b, code;
         block_code = "$yy";
 
         parts = [];
@@ -1735,7 +1723,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, __b, while_scope, tmp_break_val;if (self.args == undefined) { self.args = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, __b, while_scope, tmp_break_val;
         code = [];
 
         if ((__a = self.args['m$[]'](0), __a !== false && __a !== nil)) {
@@ -1783,7 +1771,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, __b;if (self.args == undefined) { self.args = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, __a, __b;
         code = [];
 
         if ((__a = self.args['m$[]'](0), __a !== false && __a !== nil)) {
@@ -1842,12 +1830,12 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self;
       });
 
-      $defn(self, 'set_captures_break', function() { var self = this;var tmp;if (self.current_scope == undefined) { self.current_scope = nil; }
+      $defn(self, 'set_captures_break', function() { var self = this;var tmp;
         tmp = self.current_scope.m$temp_local();
         return self.captures_break = tmp;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var stmt_level, truthy, eval_expr, code, return_value, __a;if (self.type == undefined) { self.type = nil; }if (self.expr == undefined) { self.expr = nil; }if (self.stmt == undefined) { self.stmt = nil; }if (self.end_line == undefined) { self.end_line = nil; }if (self.captures_break == undefined) { self.captures_break = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var stmt_level, truthy, eval_expr, code, return_value, __a;
         self.current_scope = opts['m$[]']('scope');
         stmt_level = ((level.valueOf() === $cg(self, 'LEVEL_EXPR').valueOf() ? $cg(self, 'LEVEL_TOP_CLOSURE') : $cg(self, 'LEVEL_TOP')));
         truthy = (self.type.valueOf() === 'while'.valueOf() ? '' : '!');
@@ -1901,7 +1889,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var stmt_level, idx, ref, len, code;if (self.expr == undefined) { self.expr = nil; }if (self.stmt == undefined) { self.stmt = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var stmt_level, idx, ref, len, code;
         self.current_scope = opts['m$[]']('scope');
         stmt_level = ((level.valueOf() === $cg(self, 'LEVEL_EXPR').valueOf() ? $cg(self, 'LEVEL_TOP_CLOSURE') : $cg(self, 'LEVEL_TOP')));
 
@@ -1930,7 +1918,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.args = args;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.args == undefined) { self.args = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         parts = [];
 
         if ((__a = self.args['m$[]'](0), __a !== false && __a !== nil)) {
@@ -1952,7 +1940,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var args, __a, code, __b, return_func;if (self.args == undefined) { self.args = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var args, __a, code, __b, return_func;
         args = self.args;
 
         if ((__a = args['m$[]'](0)['m$nil?'](), __a !== false && __a !== nil)) {
@@ -1989,7 +1977,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = endn['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var code, old_indent, __a, __b, opt_ensure;if (self.body == undefined) { self.body = nil; }if (self.end_line == undefined) { self.end_line = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var code, old_indent, __a, __b, opt_ensure;
         code = "try {";
         old_indent = opts['m$[]']('indent');
         opts['m$[]=']('indent', opts['m$[]']('indent') + $cg(self, 'INDENT'));
@@ -2028,7 +2016,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self['false'] = falsy;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var test;if (self.expr == undefined) { self.expr = nil; }if (self['true'] == undefined) { self['true'] = nil; }if (self['false'] == undefined) { self['false'] = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var test;
         test = self.m$generate_truthy_test(self.expr, opts);
         return ("(" + (test).m$to_s() + " ? " + (self['true'].m$generate(opts, $cg(self, 'LEVEL_EXPR'))).m$to_s() + " : " + (self['false'].m$generate(opts, $cg(self, 'LEVEL_EXPR'))).m$to_s() + ")");
       });
@@ -2043,7 +2031,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.value = val['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.value == undefined) { self.value = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return ("$rb.gg('" + (self.value).m$to_s() + "')");
       });
         }, 0);
@@ -2066,7 +2054,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.val = val['m$[]']('value');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;if (self.val == undefined) { self.val = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;
         return ("(" + (self.val).m$to_s() + ")");
       });
         }, 0);
@@ -2078,7 +2066,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.parts = parts;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.parts == undefined) { self.parts = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         parts = (__a = self.parts, $B.f = __a.m$map, ($B.p =function(part) { var self = this;
           if (part['m$[]'](0).valueOf() === 'string_content'.valueOf()) {
             return part['m$[]'](1)['m$[]']('value');
@@ -2099,7 +2087,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = endn['m$[]']('line');
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.parts == undefined) { self.parts = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         parts = (__a = self.parts, $B.f = __a.m$map, ($B.p =function(part) { var self = this;
           if (part['m$[]'](0).valueOf() === 'string_content'.valueOf()) {
             return part['m$[]'](1)['m$[]']('value').m$inspect();
@@ -2122,7 +2110,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.end_line = last.m$line();
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var beg, last, excl;if (self.beg == undefined) { self.beg = nil; }if (self.last == undefined) { self.last = nil; }if (self.range == undefined) { self.range = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var beg, last, excl;
         beg = self.beg.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
         last = self.last.m$generate(opts, $cg(self, 'LEVEL_EXPR'));
         excl = self.range.valueOf() === '...'.valueOf();
@@ -2137,7 +2125,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
         return self.parts = parts;
       });
 
-      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;if (self.parts == undefined) { self.parts = nil; }
+      return $defn(self, 'generate', function(opts, level) { var self = this;var parts, __a, __b;
         parts = (__a = self.parts, $B.f = __a.m$map, ($B.p =function(a) { var self = this; var __a;
           if ((__a = a['m$is_a?']($cg(self, 'SymbolNode')), __a !== false && __a !== nil)) {
             return a.m$generate(opts, level);
@@ -2152,7 +2140,7 @@ opal.lib('opal/nodes', function($rb, self, __FILE__) {function $$(){return $clas
     }, 0);
 }, 2);
 }
-var nil = $rb.Qnil, $super = $rb.S, $break = $rb.B, $class = $rb.dc, $defn = $rb.dm, $defs = $rb.ds, $cg = $rb.cg, $range = $rb.G, $hash = $rb.H, $B = $rb.P, $rb_send = $rb.sm;return $$();
+var nil = $rb.Qnil, $super = $rb.S, $break = $rb.B, $class = $rb.dc, $defn = $rb.dm, $defs = $rb.ds, $cg = $rb.cg, $range = $rb.G, $hash = $rb.H, $B = $rb.P, $rb_send = $rb.sm;$rb.iv(["line", "while_scope_stack", "while_scope", "variables", "scope_vars", "temp_queue", "temp_current", "block_arg_name", "statements", "overload_arithmetic", "overload_comparison", "overload_bitwise", "overload_shift", "overload_equal", "method_missing", "ivars", "nodes", "value", "recv", "mid", "args", "block", "base", "class_name", "end_line", "super", "cls_name", "expr", "singleton", "fname", "body", "lhs", "rhs", "parts", "stmt", "tail", "expr_level", "type", "force_else", "val", "name", "generator_opts", "asgn", "join", "op", "arefs", "returns", "current_scope", "captures_break", "true", "false", "beg", "last", "range"]);return $$();
 });opal.lib('opal/lexer', function($rb, self, __FILE__) {function $$(){self.m$require('opal/parser');
 self.m$require('opal/nodes');
 
@@ -2222,57 +2210,57 @@ return $class(self, nil, 'Opal', function(self) {
       return nodes.m$generate_top(options);
     });
 
-    $defn(self, 'next_token', function() { var self = this;var t;if (self.line_number == undefined) { self.line_number = nil; }
+    $defn(self, 'next_token', function() { var self = this;var t;
       t = self.m$get_next_token();
       t['m$[]='](1, $hash('value', t['m$[]'](1), 'line', self.line_number));
       return t;
     });
 
-    $defn(self, 'cond_push', function(n) { var self = this;if (self.cond == undefined) { self.cond = nil; }
+    $defn(self, 'cond_push', function(n) { var self = this;
       return self.cond = (self.cond['m$<<'](1))['m$|']((n['m$&'](1)));
     });
 
-    $defn(self, 'cond_pop', function() { var self = this;if (self.cond == undefined) { self.cond = nil; }
+    $defn(self, 'cond_pop', function() { var self = this;
       return self.cond = self.cond['m$>>'](1);
     });
 
-    $defn(self, 'cond_lexpop', function() { var self = this;if (self.cond == undefined) { self.cond = nil; }
+    $defn(self, 'cond_lexpop', function() { var self = this;
       return self.cond = (self.cond['m$>>'](1))['m$|']((self.cond['m$&'](1)));
     });
 
-    $defn(self, 'cond?', function() { var self = this;if (self.cond == undefined) { self.cond = nil; }
+    $defn(self, 'cond?', function() { var self = this;
       return (self.cond['m$&'](1)).valueOf() !== (0).valueOf();
     });
 
-    $defn(self, 'cmdarg_push', function(n) { var self = this;if (self.cmdarg == undefined) { self.cmdarg = nil; }
+    $defn(self, 'cmdarg_push', function(n) { var self = this;
       return self.cmdarg = (self.cmdarg['m$<<'](1))['m$|']((n['m$&'](1)));
     });
 
-    $defn(self, 'cmdarg_pop', function() { var self = this;if (self.cmdarg == undefined) { self.cmdarg = nil; }
+    $defn(self, 'cmdarg_pop', function() { var self = this;
       return self.cmdarg = self.cmdarg['m$>>'](1);
     });
 
-    $defn(self, 'cmdarg_lexpop', function() { var self = this;if (self.cmdarg == undefined) { self.cmdarg = nil; }
+    $defn(self, 'cmdarg_lexpop', function() { var self = this;
       return self.cmdarg = (self.cmdarg['m$>>'](1))['m$|']((self.cmdarg['m$&'](1)));
     });
 
-    $defn(self, 'cmdarg?', function() { var self = this;if (self.cmdarg == undefined) { self.cmdarg = nil; }
+    $defn(self, 'cmdarg?', function() { var self = this;
       return (self.cmdarg['m$&'](1)).valueOf() !== (0).valueOf();
     });
 
-    $defn(self, 'push_string_parse', function(hash) { var self = this;if (self.string_parse_stack == undefined) { self.string_parse_stack = nil; }
+    $defn(self, 'push_string_parse', function(hash) { var self = this;
       return self.string_parse_stack['m$<<'](hash);
     });
 
-    $defn(self, 'pop_string_parse', function() { var self = this;if (self.string_parse_stack == undefined) { self.string_parse_stack = nil; }
+    $defn(self, 'pop_string_parse', function() { var self = this;
       return self.string_parse_stack.m$pop();
     });
 
-    $defn(self, 'current_string_parse', function() { var self = this;if (self.string_parse_stack == undefined) { self.string_parse_stack = nil; }
+    $defn(self, 'current_string_parse', function() { var self = this;
       return self.string_parse_stack.m$last();
     });
 
-    $defn(self, 'next_string_token', function() { var self = this;var str_parse, scanner, space, interpolate, __a, words, __b, __c, result, str_buffer, complete_str;if (self.scanner == undefined) { self.scanner = nil; }
+    $defn(self, 'next_string_token', function() { var self = this;var str_parse, scanner, space, interpolate, __a, words, __b, __c, result, str_buffer, complete_str;
 
       str_parse = self.m$current_string_parse();
       scanner = self.scanner;
@@ -2347,7 +2335,7 @@ return $class(self, nil, 'Opal', function(self) {
       return ['STRING_CONTENT', complete_str];
     });
 
-    $defn(self, 'add_string_content', function(str_buffer, str_parse) { var self = this;var scanner, end_str_re, interpolate, words, __a, __b, c, handled, __c, __d, __e, reg;if (self.scanner == undefined) { self.scanner = nil; }
+    $defn(self, 'add_string_content', function(str_buffer, str_parse) { var self = this;var scanner, end_str_re, interpolate, words, __a, __b, c, handled, __c, __d, __e, reg;
       scanner = self.scanner;
 
 
@@ -2396,7 +2384,7 @@ return $class(self, nil, 'Opal', function(self) {
       if ((__d = scanner['m$eos?'](), __d !== false && __d !== nil)) {        return self.m$raise("reached EOF while in string");}
     });
 
-    return $defn(self, 'get_next_token', function() { var self = this;var string_scanner, __a, __b, scanner, space_seen, cmd_start, c, start_word, end_word, result, __c, __d, __e, sign, matched;if (self.scanner == undefined) { self.scanner = nil; }if (self.line_number == undefined) { self.line_number = nil; }if (self.lex_state == undefined) { self.lex_state = nil; }
+    return $defn(self, 'get_next_token', function() { var self = this;var string_scanner, __a, __b, scanner, space_seen, cmd_start, c, start_word, end_word, result, __c, __d, __e, sign, matched;
       string_scanner = self.m$current_string_parse();
 
       if ((__a = (((__b = string_scanner), __b != false && __b != nil) ? string_scanner['m$[]']('content') : __b), __a !== false && __a !== nil)) {
@@ -3056,7 +3044,7 @@ return $class(self, nil, 'Opal', function(self) {
     }, 0);
 }, 2);
 }
-var nil = $rb.Qnil, $super = $rb.S, $break = $rb.B, $class = $rb.dc, $defn = $rb.dm, $defs = $rb.ds, $cg = $rb.cg, $range = $rb.G, $hash = $rb.H, $B = $rb.P, $rb_send = $rb.sm;return $$();
+var nil = $rb.Qnil, $super = $rb.S, $break = $rb.B, $class = $rb.dc, $defn = $rb.dm, $defs = $rb.ds, $cg = $rb.cg, $range = $rb.G, $hash = $rb.H, $B = $rb.P, $rb_send = $rb.sm;$rb.iv(["line_number", "cond", "cmdarg", "string_parse_stack", "scanner", "lex_state"]);return $$();
 });opal.lib('opal/parser', function($rb, self, __FILE__) {function $$(){
 
 
