@@ -57,6 +57,8 @@ module Opal; class Parser
       @unique   = 0
       @symbols  = {}
       @sym_id   = 0
+
+      @opalite  = false
     end
 
     # guaranteed unique id per file..
@@ -120,6 +122,11 @@ module Opal; class Parser
 
     def process(sexp, level)
       type = sexp.shift
+
+      if @opalite
+        processor = "opalite_#{type}"
+        return __send__ processor, sexp, level if respond_to? processor
+      end
 
       raise "Unsupported sexp: #{type}" unless respond_to? type
 
@@ -262,9 +269,16 @@ module Opal; class Parser
       process exp.shift, level
     end
 
+    def iter exp, level
+      call, args, body = exp
+      call << s(:iter_block, args, body)
+
+      process call, level
+    end
+
     # s(:iter, call, block_args [, body)
-    def iter(sexp, level)
-      call, args, body = sexp
+    def iter_block(sexp, level)
+      args, body = sexp
       body ||= s(:nil)
       body = returns body
       code, vars, params = "", [], nil
@@ -291,8 +305,7 @@ module Opal; class Parser
         code = "var #{vars.join ', '};" + code unless vars.empty?
       end
 
-      call << "function(#{params}) {\n#{code}}"
-      process call, level
+      "function(#{params}) {\n#{code}}"
     end
 
     # block args
@@ -350,6 +363,7 @@ module Opal; class Parser
     def call(sexp, level)
       recv, meth, arglist, iter = sexp
 
+      return js_opalite(sexp, level) if recv and recv[1] == :VM
       return js_operator_call(sexp, level) if CALL_OPERATORS.include? meth.to_s
       return js_block_given(sexp, level) if meth == :block_given?
 
@@ -380,6 +394,7 @@ module Opal; class Parser
       dispatch += "#{mid} || #{mm})"
 
       if iter
+        iter = process iter, :expression
         dispatch = "(#{tmpproc} = #{dispatch}, (#{tmpproc}.$B = #{iter}).$S "
         dispatch += "= self, #{tmpproc})"
       elsif block_pass
@@ -1072,6 +1087,202 @@ module Opal; class Parser
     def next(exp, level)
       "return ;"
     end
+
+    # @group Opalite
+
+    ##
+    # Main opalite (VM) handler, this just disptaches to its helper
+    # methods.
+    #
+    # Eg:
+    #
+    #     VM.command 1, 2, 3
+    #
+    # Will come to this method as:
+    #
+    #     s(:VM, :command, s(:arglist))
+
+    def js_opalite exp, level
+      _, cmd, args, iter = exp
+
+      helper = "vm_#{cmd}"
+      raise "Unsupported opalite command #{cmd}" unless respond_to? helper
+
+      __send__ helper, args, iter
+    end
+
+    ##
+    # Used to signify the start of VM code. This will just make the receiver
+    # go into opalite vm mode. If already in VM mode, causes an error.
+
+    def vm_begin arglist, iter
+      raise 'Already in Opalite VM mode' if @opalite
+      @opalite = true
+
+      '' # keep code generation happy
+    end
+
+    ##
+    # Used to exit VM code area. This will make the receiver go back into
+    # normal mode. If already in normal mode, raises an error.
+
+    def vm_end arglist, iter
+      raise 'Already in normal VM mode' unless @opalite
+      @opalite = false
+
+      '' # code generation
+    end
+
+    ##
+    # Generates code to test if the argument is truthy, i.e. a truthy
+    # value to ruby. Only +false+ and +nil+ are falsy values.
+    #
+    # Usage:
+    #
+    #     VM.truthy? true   # => true
+    #     VM.truthy? false  # => false
+    #     VM.truthy? ""     # => true
+
+    def vm_truthy? arglist, iter
+      arg = arglist[1] or raise 'vm_truthy? expects an argument'
+
+      tmp = @scope.new_temp
+      obj = process arg, :expression
+
+      "(#{tmp} = #{obj}, #{tmp} !== false && #{tmp} != null)".tap {
+        @scope.queue_temp tmp
+      }
+    end
+
+    ##
+    # Generates code to test if the given argument is falsy. Only
+    # +false+ and +nil+ are falsy values in ruby.
+    #
+    # Usage:
+    #
+    #     VM.falsy? false  # => true
+    #     VM.falsy? nil    # => true
+    #     VM.falsy? ""     # => false
+
+    def vm_falsy? arglist, iter
+      arg = arglist[1] or raise 'vm_falsy? expects an argument'
+
+      tmp = @scope.new_temp
+      obj = process arg, :expression
+
+      "(#{tmp} = #{obj}, #{tmp} === false || #{tmp} == null)".tap {
+        @scope.queue_temp tmp
+      }
+    end
+
+    ##
+    # Send a ruby message to the receiver object. In VM mode this allows
+    # a quick easy syntax to send a ruby message that does not rely on
+    # the developer knowing underlying implementation details. Thus, the
+    # compiler can be changed without breaking code.
+    #
+    # Example
+    #
+    #     VM.send object, :some_method, arg1, arg2
+    #     # => ruby method call supporing method_missing etc
+    #
+    # This method (will be) is used heavily in the corelib as under
+    # Opalite mode, all method calls default to standard js method calls.
+    # This send method therefore becomes the only way to send real ruby
+    # method calls.
+
+    def vm_send arglist, iter
+      arglist.shift # :arglist
+      recv = arglist.shift or raise 'vm_send expects a receiver'
+      mid  = arglist.shift or raise 'vm_send expects a method_id'
+      arglist.unshift :arglist
+
+      # use existing process_call to handle it.
+      call s(recv, mid[1], arglist), :expression
+    end
+
+    def vm_each arglist, iter
+      puts "EACH"
+      body = iter[2] || s(:nil)
+      obj = arglist[1] or raise 'vm_each needs an object to loop over'
+
+      if args = iter[1]
+        if args.first == :lasgn
+          argref = args[1]
+          idxref = tmpidx = @scope.new_temp
+        else # margs, so we have two!
+          argref = args[1][1][1]
+          idxref = args[1][2][1]
+        end
+      else
+        argref = tmparg = @scope.new_temp
+        idxref = tmpidx = @scope.new_temp
+      end
+      puts arglist.inspect
+      puts iter.inspect
+      puts body.inspect
+      puts "ARGREF: #{argref}, IDXREF: #{idxref}"
+      "each"
+    end
+
+    ##
+    # Example:
+    #
+    #     for obj, idx in recv
+    #       body
+    #     end
+    #
+    # s(:for, recv, s(:masgn), body)
+
+    def opalite_for exp, level
+      recv, args, body = exp
+      body ||= s(:nil)
+
+      if args.first == :lasgn
+        arg = args[1]
+        @scope.add_local arg.intern
+        idx = tmpidx = @scope.new_temp
+      else
+        arg = args[1][1][1]
+        idx = args[1][2][1]
+        @scope.add_local arg.intern
+        @scope.add_local idx.intern
+      end
+
+      obj = process recv, :expression
+      len = @scope.new_temp
+
+      code = "for (#{idx} = 0, #{len} = #{obj}.length; #{idx} < #{len}; #{idx}++) {\n"
+      code += "#{arg} = #{obj}[#{idx}];\n"
+      code += process body, :statement
+      code += "\n}"
+    end
+
+    def opalite_call exp, level
+      recv, meth, arglist, iter = exp
+
+      return js_opalite exp, level if recv and recv[1] == :VM
+      return js_operator_call exp, level if CALL_OPERATORS.include? meth.to_s
+      return js_block_given if meth == :block_given?
+
+      recv = "#{process recv, :expression}." if recv
+      args = process arglist, :expression
+
+      "#{recv}#{meth}(#{args})"
+    end
+
+    def opalite_or exp, level
+      lhs, rhs = exp
+
+      "#{process lhs, :expression} || #{process rhs, :expression}"
+    end
+
+    def opalite_and exp, level
+      lhs, rhs = exp
+
+      "#{process lhs, :expression} && #{process rhs, :expression}"
+    end
+    # @endgroup Opalite
   end
 end; end
 
