@@ -117,13 +117,11 @@ class Array
   #
   # @return [Array] returns the receiver
   def each
-    return enum_for :each unless block_given?
+    return enum_for(:each) unless block_given?
 
-    `
-      for (var i = 0, len = self.length; i < len; i++) {
-        #{yield `self[i]`}
-      }
-    `
+    for obj in self
+      yield obj
+    end
 
     self
   end
