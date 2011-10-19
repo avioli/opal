@@ -119,8 +119,12 @@ class Array
   def each
     return enum_for(:each) unless block_given?
 
-    for obj in self
+    idx = 0
+    len = @length
+
+    while idx < len
       yield obj
+      idx += 1
     end
 
     self
