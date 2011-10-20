@@ -4,21 +4,30 @@ module Opal; class Parser
     INDENT = ' '
 
     LEVEL = {
-      :statement          => 0,
-      :statement_closure  => 1,
-      :list               => 2,
-      :expression         => 3,
-      :receiver           => 4
+      statement:          0,
+      statement_closure:  1,
+      list:               2,
+      expression:         3,
+      receiver:           4
     }
 
     # Maths operators
     MATH = %w(+ - / * %)
 
     # Comparison operators
-    COMPARE = %w(< <= > >=)
+    COMPARE = %w(< <= > >= == !=)
 
     # All operators that can be optimized in method calls
     CALL_OPERATORS = MATH + COMPARE
+
+    ##
+    # Ruby operator calls to their native counterparts. These maps
+    # are used in opalite mode for operators.
+
+    OPERATOR_MAP = {
+      :==     => '===',
+      :"!="   => '!=='
+    }
 
     # Reserved javascript keywords - we cannot create variables with the
     # same name
@@ -143,6 +152,8 @@ module Opal; class Parser
       return returns s(:nil) unless sexp
 
       case sexp.first
+      when :for
+        sexp
       when :scope
         sexp
       when :block
@@ -218,16 +229,19 @@ module Opal; class Parser
       "$yield !== $noproc"
     end
 
-    def js_operator_call(sexp, level)
-      recv, meth, arglist = sexp
+    def operator_call exp, level
+      recv, meth, arglist = exp
 
       a = @scope.new_temp
       b = @scope.new_temp
       l  = process recv, :expression
       r  = process arglist[1], :expression
 
+      op = OPERATOR_MAP[meth] || meth
+
       res = "(#{a} = #{l}, #{b} = #{r}, typeof(#{a}) === "
-      res += "'number' ? #{a} #{meth} #{b} : #{a}['m$#{meth}']"
+      res += "'number' ? #{a} #{op} #{b} : (#{a} == null ? $nilcls : #{a})"
+      res += "['m$#{meth}']"
       res += "(#{a}, '#{meth}', #{b}))"
 
       @scope.queue_temp a
@@ -262,7 +276,7 @@ module Opal; class Parser
 
     # s(:not, sexp)
     def not(sexp, level)
-      "!#{process sexp.shift, :expression}"
+      "!(#{process sexp.shift, :expression})"
     end
 
     def block_pass(exp, level)
@@ -363,8 +377,12 @@ module Opal; class Parser
     def call(sexp, level)
       recv, meth, arglist, iter = sexp
 
-      return js_opalite(sexp, level) if recv and recv[1] == :VM
-      return js_operator_call(sexp, level) if CALL_OPERATORS.include? meth.to_s
+      return js_opalite(sexp, level) if recv and recv[1] == :O
+
+      if CALL_OPERATORS.include? meth.to_s
+        return process(s(:operator_call, recv, meth, arglist), level)
+      end
+
       return js_block_given(sexp, level) if meth == :block_given?
 
       if Sexp === arglist.last and arglist.last.first == :block_pass
@@ -1113,7 +1131,7 @@ module Opal; class Parser
     def js_opalite exp, level
       _, cmd, args, iter = exp
 
-      helper = "vm_#{cmd}"
+      helper = "o_#{cmd}"
       raise "Unsupported opalite command #{cmd}" unless respond_to? helper
 
       __send__ helper, args, iter
@@ -1123,7 +1141,7 @@ module Opal; class Parser
     # Used to signify the start of VM code. This will just make the receiver
     # go into opalite vm mode. If already in VM mode, causes an error.
 
-    def vm_begin arglist, iter
+    def o_begin arglist, iter
       raise 'Already in Opalite VM mode' if @opalite
       @opalite = true
 
@@ -1134,7 +1152,7 @@ module Opal; class Parser
     # Used to exit VM code area. This will make the receiver go back into
     # normal mode. If already in normal mode, raises an error.
 
-    def vm_end arglist, iter
+    def o_end arglist, iter
       raise 'Already in normal VM mode' unless @opalite
       @opalite = false
 
@@ -1151,7 +1169,7 @@ module Opal; class Parser
     #     VM.truthy? false  # => false
     #     VM.truthy? ""     # => true
 
-    def vm_truthy? arglist, iter
+    def o_truthy? arglist, iter
       arg = arglist[1] or raise 'vm_truthy? expects an argument'
 
       tmp = @scope.new_temp
@@ -1172,7 +1190,7 @@ module Opal; class Parser
     #     VM.falsy? nil    # => true
     #     VM.falsy? ""     # => false
 
-    def vm_falsy? arglist, iter
+    def o_falsy? arglist, iter
       arg = arglist[1] or raise 'vm_falsy? expects an argument'
 
       tmp = @scope.new_temp
@@ -1191,7 +1209,7 @@ module Opal; class Parser
     #
     # Example
     #
-    #     VM.send object, :some_method, arg1, arg2
+    #     O.send object, :some_method, arg1, arg2
     #     # => ruby method call supporing method_missing etc
     #
     # This method (will be) is used heavily in the corelib as under
@@ -1199,7 +1217,7 @@ module Opal; class Parser
     # This send method therefore becomes the only way to send real ruby
     # method calls.
 
-    def vm_send arglist, iter
+    def o_send arglist, iter
       arglist.shift # :arglist
       recv = arglist.shift or raise 'vm_send expects a receiver'
       mid  = arglist.shift or raise 'vm_send expects a method_id'
@@ -1207,30 +1225,6 @@ module Opal; class Parser
 
       # use existing process_call to handle it.
       call s(recv, mid[1], arglist), :expression
-    end
-
-    def vm_each arglist, iter
-      puts "EACH"
-      body = iter[2] || s(:nil)
-      obj = arglist[1] or raise 'vm_each needs an object to loop over'
-
-      if args = iter[1]
-        if args.first == :lasgn
-          argref = args[1]
-          idxref = tmpidx = @scope.new_temp
-        else # margs, so we have two!
-          argref = args[1][1][1]
-          idxref = args[1][2][1]
-        end
-      else
-        argref = tmparg = @scope.new_temp
-        idxref = tmpidx = @scope.new_temp
-      end
-      puts arglist.inspect
-      puts iter.inspect
-      puts body.inspect
-      puts "ARGREF: #{argref}, IDXREF: #{idxref}"
-      "each"
     end
 
     ##
@@ -1266,17 +1260,81 @@ module Opal; class Parser
       code += "\n}"
     end
 
+    ##
+    # Opalite style call.
+    #
+    # When not given any args, will always compile to a property
+    # access. Even if the js function doesnt take any args, pass
+    # it nil to force an argument (current limitation of
+    # ruby_parser where we can't distinguish x.y and x.y()
+
     def opalite_call exp, level
       recv, meth, arglist, iter = exp
 
-      return js_opalite exp, level if recv and recv[1] == :VM
-      return js_operator_call exp, level if CALL_OPERATORS.include? meth.to_s
+      return js_opalite exp, level if recv and recv[1] == :O
+
+      if CALL_OPERATORS.include? meth.to_s
+        return process(s(:operator_call, recv, meth, arglist), level)
+      end
+
+      if meth == :[]
+        return process(s(:aref_call, recv, meth, arglist), level)
+      end
+
       return js_block_given if meth == :block_given?
 
       recv = "#{process recv, :expression}." if recv
       args = process arglist, :expression
+      args = "(#{args})" unless args.empty?
 
-      "#{recv}#{meth}(#{args})"
+      "#{recv}#{meth}#{args}"
+    end
+
+    ##
+    # s(:operator_call, recv, op, s(:srglist))
+
+    def opalite_operator_call exp, level
+      recv = process exp[0], :expression
+      op   = exp[1]
+      rhs  = process exp[2][1], :expression
+
+      op = OPERATOR_MAP[op] || op
+
+      "#{recv} #{op} #{rhs}"
+    end
+
+    ##
+    # s(:aref_call, recv, :[], s(:arglist))
+
+    def opalite_aref_call exp, level
+      recv = process exp[0], :expression
+      arg  = exp[2][1]
+
+      if arg[0] == :lit and Symbol === arg[1]
+        arg = arg[1].to_s
+        "#{recv}.#{arg}"
+      else
+        "#{recv}[#{process exp[2][1], :expression}]"
+      end
+    end
+
+    def opalite_if exp, level
+      test, truthy, falsy = exp
+
+      if level == :expression
+        truthy = returns(truthy) if truthy
+        falsy = returns(falsy) if falsy
+      end
+
+      code = "if (#{process test, :expression}) {"
+      code += process(truthy, :statement) if truthy
+      code += "} else {#{process falsy, :statement}" if falsy
+      code += "}"
+
+      code
+      code = "(function() { #{code} })()" if level == :expression
+
+      code
     end
 
     def opalite_or exp, level

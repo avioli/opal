@@ -22,45 +22,60 @@ class Hash
   end
 
   def ==(other)
-    if self == other
-      return true
-    elsif !other.keys or !other.assocs
-      return false
-    elsif @keys.length != other.keys.length
-      return false
-    end
+    `
+      if (self === other) {
+        return true;
+      }
+      else if (!other.k || !other.a) {
+        return false;
+      }
+      else if (self.k.length != other.k.length) {
+        return false;
+      }
 
-    keys, assocs, values2 = @keys, @assocs, other.assocs
+      var keys    = self.k,
+          values  = self.a,
+          values2 = other.a;
 
-    for key in @keys
-      assoc = O.hash(key)
+      for (var i = 0, length = keys.length; i < length; i++) {
+        var key   = keys[i],
+            assoc = key.$h();
 
-      return false unless values2.hasOwnProperty assoc
+        if (!values2.hasOwnProperty(assoc)) {
+          return false;
+        }
 
-      return false unless values[assoc] == values2[assoc]
-    end
+        if (!#{`values[assoc]` == `values2[assoc]`}) {
+          return false;
+        }
+      }
+    `
 
     true
   end
 
   def [](key)
-    assoc = O.hash key
+    `
+      var assoc = key.$h();
 
-    if @assocs.hasOwnProperty assoc
-      return @assocs[assoc]
-    end
+      if (self.a.hasOwnProperty(assoc)) {
+        return self.a[assoc];
+      }
 
-    @default_proc ? self.default_proc(self, key) : @default
+      return self.df ? self.df(self, key) : self.d;
+    `
   end
 
   def []=(key, value)
-    assoc = O.hash key
+    `
+      var assoc = key.$h();
 
-    unless @assocs.hasOwnProperty assoc
-      @keys.push key
-    end
+      if (!self.a.hasOwnProperty(assoc)) {
+        self.k.push(key);
+      }
 
-    @assocs[assoc] = value
+      return self.a[assoc] = value;
+    `
   end
 
   def assoc(object)
@@ -586,3 +601,4 @@ class Hash
     raise NotImplementedError, 'Hash#values_at not yet implemented'
   end
 end
+
