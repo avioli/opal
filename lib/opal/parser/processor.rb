@@ -56,7 +56,8 @@ module Opal; class Parser
       "$mm"     => "mm",    # method_missing dispatcher
       "$ms"     => "ms",    # method_missing dispatcher for setters (x.y=)
       "$mn"     => "mn",    # method_missing dispatcher for no arguments
-      "$slice"  => "as"     # exposes Array.prototype.slice (for splats)
+      "$slice"  => "as",    # exposes Array.prototype.slice (for splats)
+      "$hashed" => "ha"     # gets the hash code of the object.
     }
 
     def initialize(file = nil)
@@ -377,7 +378,7 @@ module Opal; class Parser
     def call(sexp, level)
       recv, meth, arglist, iter = sexp
 
-      return js_opalite(sexp, level) if recv and recv[1] == :O
+      return js_opalite(sexp, level) if recv and recv[1] == :Opal
 
       if CALL_OPERATORS.include? meth.to_s
         return process(s(:operator_call, recv, meth, arglist), level)
@@ -1227,6 +1228,30 @@ module Opal; class Parser
       call s(recv, mid[1], arglist), :expression
     end
 
+    def o_hash arglist, iter
+      obj = arglist[1] or raise 'o_hash expects an object'
+
+      "$hashed(#{process obj, :expression})"
+    end
+
+    def o_native_object arglist, iter
+      "{}"
+    end
+
+    def o_delete arglist, iter
+      obj = arglist[1] or raise 'o_delete expects an object'
+      "delete #{process obj, :expression}"
+    end
+
+    def o_not_implemented arglist, iter
+      arglist.shift
+      cls = arglist.shift or raise 'expected a Class'
+      mid = arglist.shift or raise 'expected a method id'
+      lev = :expression
+
+      "rb_not_implemented(#{process cls, lev}, #{process mid, lev})"
+    end
+
     ##
     # Example:
     #
@@ -1271,7 +1296,7 @@ module Opal; class Parser
     def opalite_call exp, level
       recv, meth, arglist, iter = exp
 
-      return js_opalite exp, level if recv and recv[1] == :O
+      return js_opalite exp, level if recv and recv[1] == :Opal
 
       if CALL_OPERATORS.include? meth.to_s
         return process(s(:operator_call, recv, meth, arglist), level)
@@ -1281,7 +1306,7 @@ module Opal; class Parser
         return process(s(:aref_call, recv, meth, arglist), level)
       end
 
-      return js_block_given if meth == :block_given?
+      return js_block_given(exp, level) if meth == :block_given?
 
       recv = "#{process recv, :expression}." if recv
       args = process arglist, :expression
@@ -1315,6 +1340,28 @@ module Opal; class Parser
         "#{recv}.#{arg}"
       else
         "#{recv}[#{process exp[2][1], :expression}]"
+      end
+    end
+
+    ##
+    # recv.mid = rhs
+    #
+    # s(recv, :mid=, s(:arglist, rhs))
+
+    def opalite_attrasgn exp, level
+      puts exp.inspect
+      recv, mid, arglist = exp
+      recv = process recv, :expression
+      aref = arglist[1] or raise 'no aref arg'
+      aset = arglist[2] or raise 'no aset arg'
+
+      aref = process aref, :expression
+      aset = process aset, :expression
+
+      if mid == :[]=
+        "#{recv}[#{aref}] = #{aset}"
+      else
+        "#{recv}.#{aref} = #{aset}"
       end
     end
 
