@@ -81,7 +81,176 @@ function rb_class_from_native(klass, mid, object) {
   return rb_from_native(klass, object);
 }
 
+function rb_mod_constants(mod) {
+  rb_raise(rb_eNotImplementedError, "Module.constants");
+}
+
+function rb_mod_nesting(mod) {
+  rb_raise(rb_eNotImplementedError, "Module.nesting");
+}
+
+function rb_mod_new() {
+  var block;
+
+  var mod = rb_define_module_id();
+
+  if (block = rb_mod_new.$B) {
+    rb_mod_new.$B = null;
+
+    block(mod, null);
+  }
+
+  return mod;
+}
+
+/**
+ * :call-seq:
+ *    mod === obj     -> true or false
+ */
+function rb_mod_eqq(mod, mid, obj) {
+  // FIXME: remove this line
+  return false;
+  return rb_obj_is_kind_of(obj, mod);
+}
+
+/**
+ * :call-seq:
+ *    alias_method(new_name, old_name)    -> nil
+ */
+function rb_mod_alias_method(mod, mid, name, old) {
+  rb_alias_method(mod, name, old);
+  return mod;
+}
+
+/**
+ * :call-seq:
+ *    mod.ancestors         -> array
+ */
+function rb_mod_ancestors(mod) {
+  var result = [];
+
+  while (mod) {
+    if (mod.$flags & FL_SINGLETON) {
+      // nothing?
+    }
+    else {
+      result.push(mod);
+    }
+
+    mod = mod.$super;
+  }
+
+  return result;
+}
+
+function rb_attr(mod, attr, reader, writer) {
+  if (reader) {
+    rb_define_method(mod, attr, function(obj) {
+      return obj[attr];
+    });
+  }
+
+  if (writer) {
+    rb_define_method(mod, attr + '=', function(obj, mid, val) {
+      return obj[attr] = val;
+    });
+  }
+}
+
+/**
+ * :call-seq:
+ *    attr_accessor(symbol, ...)    -> nil
+ */
+function rb_mod_attr_accessor(mod) {
+  var argv = ArraySlice.call(arguments, 2), argc = argv.length;
+
+  for (var i = 0; i < argc; i++) {
+    rb_attr(mod, argv[i], true, true);
+  }
+
+  return null;
+}
+
+/**
+ * :call-seq:
+ *    attr_reader(symbol, ...)    -> nil
+ */
+function rb_mod_attr_reader(mod) {
+  var argv = ArraySlice.call(arguments, 2), argc = argv.length;
+
+  for (var i = 0; i < argc; i++) {
+    rb_attr(mod, argv[i], true, false);
+  }
+
+  return null;
+}
+
+/**
+ * :call-seq:
+ *    attr_writer(symbol, ...)    -> nil
+ */
+function rb_mod_attr_writer(mod) {
+
+  var argv = ArraySlice.call(arguments, 2), argc = argv.length;
+
+  for (var i = 0; i < argc; i++) {
+    rb_attr(mod, argv[i], false, true);
+  }
+
+  return null;
+}
+
+/**
+ * :call-seq:
+ *    mod.append_features(klass)      -> mod
+ */
+function rb_mod_append_features(mod, mid, klass) {
+  rb_include_module(klass, mod);
+  return mod;
+}
+
+/**
+ * :call-seq:
+ *    mod.const_set(sym, obj)     -> obj
+ */
+function rb_mod_const_set(mod, name, value) {
+  return rb_const_set(mod, name, value);
+}
+
+/**
+ * :call-seq:
+ *    mod.define_method(sym, &block)    -> nil
+ */
+function rb_mod_define_method(mod, mid, name) {
+  var block;
+
+  if (block = rb_mod_define_method.$B) {
+    rb_mod_define_method.$B = null;
+  } else {
+    rb_raise(rb_eLocalJumpError, "no block given");
+  }
+
+  rb_define_method(mod, name, block);
+  return null;
+}
+
 function Init_Object() {
+  rb_define_singleton_method(rb_cModule, "constants", rb_mod_constants);
+  rb_define_singleton_method(rb_cModule, "nesting", rb_mod_nesting);
+  rb_define_singleton_method(rb_cModule, "new", rb_mod_new);
+
+  rb_define_method(rb_cModule, "===", rb_mod_eqq);
+  rb_define_method(rb_cModule, "alias_method", rb_mod_alias_method);
+  rb_define_method(rb_cModule, "ancestors", rb_mod_ancestors);
+
+  rb_define_method(rb_cModule, "attr_accessor", rb_mod_attr_accessor);
+  rb_define_method(rb_cModule, "attr_reader", rb_mod_attr_reader);
+  rb_define_method(rb_cModule, "attr_writer", rb_mod_attr_writer);
+
+  rb_define_method(rb_cModule, "append_features", rb_mod_append_features);
+  rb_define_method(rb_cModule, "const_set", rb_mod_const_set);
+  rb_define_method(rb_cModule, "define_method", rb_mod_define_method);
+
   rb_define_singleton_method(rb_cClass, "new", rb_class_s_new);
   rb_define_method(rb_cClass, "allocate", rb_obj_alloc);
   rb_define_method(rb_cClass, "new", rb_class_new_instance);
