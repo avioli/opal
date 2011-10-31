@@ -390,10 +390,10 @@ module Opal; class Parser
       dispatch += "#{mid})"
 
       if iter
-        dispatch = "(#{tmpproc} = #{dispatch}, (#{tmpproc}.$B = #{iter}).$S "
+        dispatch = "(#{tmpproc} = #{dispatch}, (#{tmpproc}.proc = #{iter}).self "
         dispatch += "= self, #{tmpproc})"
       elsif block_pass
-        dispatch = "(#{tmpproc} = #{dispatch}, #{tmpproc}.$B = #{block_pass}, #{tmpproc})"
+        dispatch = "(#{tmpproc} = #{dispatch}, #{tmpproc}.proc = #{block_pass}, #{tmpproc})"
       end
 
       @scope.queue_temp tmprecv
@@ -586,9 +586,9 @@ module Opal; class Parser
 
         if @scope.uses_block?
           scope_name = (@scope.name ||= unique_temp)
-          blk = "var $yield = #{scope_name}.$B || $noproc, $yself = $yield.$S, "
-          blk += "#{block_name} = #{scope_name}.$B, " if block_name
-          blk += "$break = $bjump; #{scope_name}.$B = 0;"
+          blk = "var $yield = #{scope_name}.proc || $noproc, $yself = $yield.self, "
+          blk += "#{block_name} = #{scope_name}.proc, " if block_name
+          blk += "$break = $bjump; #{scope_name}.proc = 0;"
 
           code = blk + code
         end
