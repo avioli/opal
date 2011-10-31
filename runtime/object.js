@@ -302,7 +302,81 @@ function rb_mod_name(mod) {
   return mod.__classid__;
 }
 
+/**
+ * call-seq:
+ *    obj == obj2       -> true or false
+ *    obj.eql? obj2     -> true or false
+ *    obj.equal?(obj2)  -> true or false
+ */
+function rb_obj_equal(obj, mid, obj2) {
+  return obj === obj2;
+}
+
+/**
+ * call-seq:
+ *    obj.__send__(sym, *args)    -> an_obj
+ */
+function rb_obj_send(obj, mid, sym) {
+  var args = ArraySlice.call(arguments, 3);
+  return obj.$m[sym].apply(null, [obj, sym].concat(args));
+}
+
+/**
+ * call-seq:
+ *    obj.instance_eval {}    -> some_obj
+ */
+function rb_obj_instance_eval(obj) {
+  var block = rb_obj_instance_eval.proc;
+
+  if (!block) {
+    rb_raise(rb_eArgError, "block not supplied");
+  }
+
+  rb_obj_instance_eval.proc = null;
+
+  return block(obj, null);
+}
+
+/**
+ * call-seq:
+ *    obj.instance_exec(*args) {}     -> some_obj
+ */
+function rb_obj_instance_exec(obj) {
+  var block = rb_obj_instance_exec.proc;
+
+  if (!block) {
+    rb_raise(rb_eArgError, "block not supplied");
+  }
+
+  rb_obj_instance_exec.proc = null;
+
+  return block.apply(null, [obj, null].concat(ArraySlice.cal(arguments, 2)));
+}
+
+/**
+ * call-seq:
+ *    obj.method_missing(sym, *args)
+ */
+function rb_obj_method_missing(obj, mid, sym) {
+  rb_raise(rb_eNoMethodError, "undefined method `" + sym + "` for "
+           + (obj == null ? NilObj : obj).$m.inspect(obj, "inspect"));
+}
+
 function Init_Object() {
+  rb_define_method(rb_cBasicObject, "initialize", rb_obj_dummy);
+  rb_define_method(rb_cBasicObject, "==", rb_obj_equal);
+  rb_define_method(rb_cBasicObject, "eql?", rb_obj_equal);
+  rb_define_method(rb_cBasicObject, "equal?", rb_obj_equal);
+
+  rb_define_method(rb_cBasicObject, "__send__", rb_obj_send);
+  rb_define_method(rb_cBasicObject, "instance_eval", rb_obj_instance_eval);
+  rb_define_method(rb_cBasicObject, "instance_exec", rb_obj_instance_exec);
+  rb_define_method(rb_cBasicObject, "method_missing", rb_obj_method_missing);
+
+  rb_define_method(rb_cBasicObject, "singleton_method_added", rb_obj_dummy);
+  rb_define_method(rb_cBasicObject, "singleton_method_removed", rb_obj_dummy);
+  rb_define_method(rb_cBasicObject, "singleton_method_undefined", rb_obj_dummy);
+
   rb_define_singleton_method(rb_cModule, "constants", rb_mod_constants);
   rb_define_singleton_method(rb_cModule, "nesting", rb_mod_nesting);
   rb_define_singleton_method(rb_cModule, "new", rb_mod_new);
