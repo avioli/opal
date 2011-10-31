@@ -234,6 +234,74 @@ function rb_mod_define_method(mod, mid, name) {
   return null;
 }
 
+/**
+ * :call-seq:
+ *    class.extend(mod, ...)    -> class
+ */
+function rb_mod_extend(klass) {
+  var mods = ArraySlice.call(arguments, 2);
+
+  for (var i = 0; i < mods.length; i++) {
+    rb_extend_module(klass, mods[i]);
+  }
+
+  return klass;
+}
+
+/**
+ * :call-seq:
+ *    class.include(mod, ...)     -> class
+ */
+function rb_mod_include(klass) {
+  var mods = ArraySlice.call(arguments, 2), i = mods.length - 1, mod;
+
+  while (i >= 0) {
+    mod = mods[i];
+    mod.$m.append_features(mod, "append_features", klass);
+    mod.$m.included(mod, "included", klass);
+    i--;
+  }
+
+  return klass;
+}
+
+/**
+ * :call-seq:
+ *    class.instance_methods          -> ary
+ *    class.public_instance_methods   -> ary
+ */
+function rb_class_instance_methods(klass) {
+  return klass.$methods;
+}
+
+/**
+ * :call-seq:
+ *    class.module_eval {}      -> class
+ *    class.class_eval {}       -> class
+ */
+function rb_mod_module_eval(klass) {
+  var block = rb_mod_module_eval.$B;
+
+  if (block) {
+    rb_mod_module_eval.$B = null;
+    block(klass, null);
+  }
+  else {
+    rb_raise(rb_eArgError, "No block given");
+  }
+
+  return klass;
+}
+
+/**
+ * :call-seq:
+ *    mod.name        -> str
+ *    mod.to_s        -> str
+ */
+function rb_mod_name(mod) {
+  return mod.__classid__;
+}
+
 function Init_Object() {
   rb_define_singleton_method(rb_cModule, "constants", rb_mod_constants);
   rb_define_singleton_method(rb_cModule, "nesting", rb_mod_nesting);
@@ -250,6 +318,18 @@ function Init_Object() {
   rb_define_method(rb_cModule, "append_features", rb_mod_append_features);
   rb_define_method(rb_cModule, "const_set", rb_mod_const_set);
   rb_define_method(rb_cModule, "define_method", rb_mod_define_method);
+  rb_define_method(rb_cModule, "extend", rb_mod_extend);
+  rb_define_method(rb_cModule, "include", rb_mod_include);
+  rb_define_method(rb_cModule, "included", rb_obj_dummy);
+
+  rb_define_method(rb_cModule, "instance_methods", rb_class_instance_methods);
+  rb_define_method(rb_cModule, "public_instance_methods", rb_class_instance_methods);
+
+  rb_define_method(rb_cModule, "module_eval", rb_mod_module_eval);
+  rb_define_method(rb_cModule, "class_eval", rb_mod_module_eval);
+
+  rb_define_method(rb_cModule, "name", rb_mod_name);
+  rb_define_method(rb_cModule, "to_s", rb_mod_name);
 
   rb_define_singleton_method(rb_cClass, "new", rb_class_s_new);
   rb_define_method(rb_cClass, "allocate", rb_obj_alloc);
