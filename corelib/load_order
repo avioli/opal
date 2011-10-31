@@ -9,7 +9,6 @@ nil_class
 boolean
 enumerable
 comparable
-array
 enumerator
 numeric
 rational

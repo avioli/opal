@@ -519,12 +519,12 @@ function init() {
   Rt.top          = rb_top_self;
 
   rb_cNilClass = rb_define_class('NilClass', rb_cObject);
-  Rt.NC = NilClassProto = new RObject(rb_cNilClass);
+  Rt.NC = NilObj = new RObject(rb_cNilClass);
   Qnil = null;
 
   rb_cBoolean = rb_bridge_class(Boolean.prototype, T_OBJECT | T_BOOLEAN, 'Boolean', rb_cObject);
 
-  rb_cArray = rb_bridge_class(Array.prototype, T_OBJECT | T_ARRAY, 'Array', rb_cObject);
+  Init_Array();
 
   rb_cHash = rb_define_class('Hash', rb_cObject);
 

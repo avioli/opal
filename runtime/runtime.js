@@ -30,7 +30,7 @@ var rb_cBasicObject,  rb_cObject,       rb_cModule,       rb_cClass,
   Special objects' prototypes.. saves allocating them each time they
   are needed.
 */
-var NativeObjectProto, NilClassProto;
+var NilObj;
 
 /**
   Core object type flags. Added as local variables, and onto runtime.
@@ -48,6 +48,37 @@ var T_CLASS       = 0x0001,
     T_RANGE       = 0x0400,
     T_ICLASS      = 0x0800,
     FL_SINGLETON  = 0x1000;
+
+/**
+ * Id for Qnil
+ *
+ * FIXME: should be dynamic (from NilObj)
+ */
+var NIL_ID = 13;
+
+/**
+ * Gets the hash of the receiver. This checks for bad items, such as nil
+ * and immutable objects like strings.
+ */
+function rb_hash(obj) {
+  var id;
+
+  if (obj == null) {
+    return NIL_ID;
+  }
+  else if (id = obj.$id) {
+    return id;
+  }
+  else {
+    obj.$id = rb_yield_hash();
+
+    if (id = obj.$id) {
+      return id;
+    }
+
+    return obj.$flags + obj;
+  }
+}
 
 /**
   Actually calls method missiing.
