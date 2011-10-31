@@ -4,7 +4,7 @@ function rb_obj_dummy() {
 
 function rb_class_s_new(cls, _, sup) {
   sup = sup || rb_cObject;
-  var block = rb_class_s_new.$B;
+  var block = rb_class_s_new.proc;
 
   var klass = rb_define_class_id('AnonClass', sup);
 
@@ -39,9 +39,9 @@ function rb_class_new_instance(cls, mid, args) {
   var obj = cls.$m.allocate(cls, "allocate");
   var init = obj.$m.initialize;
 
-  if (block = rb_class_new_instance.$B) {
-    rb_class_new_instance.$B = null;
-    init.$B = block;
+  if (block = rb_class_new_instance.proc) {
+    rb_class_new_instance.proc = null;
+    init.proc = block;
   }
 
   init.apply(null, [obj, "initialize"].concat(args));
@@ -94,8 +94,8 @@ function rb_mod_new() {
 
   var mod = rb_define_module_id();
 
-  if (block = rb_mod_new.$B) {
-    rb_mod_new.$B = null;
+  if (block = rb_mod_new.proc) {
+    rb_mod_new.proc = null;
 
     block(mod, null);
   }
@@ -224,8 +224,8 @@ function rb_mod_const_set(mod, name, value) {
 function rb_mod_define_method(mod, mid, name) {
   var block;
 
-  if (block = rb_mod_define_method.$B) {
-    rb_mod_define_method.$B = null;
+  if (block = rb_mod_define_method.proc) {
+    rb_mod_define_method.proc = null;
   } else {
     rb_raise(rb_eLocalJumpError, "no block given");
   }
@@ -280,10 +280,10 @@ function rb_class_instance_methods(klass) {
  *    class.class_eval {}       -> class
  */
 function rb_mod_module_eval(klass) {
-  var block = rb_mod_module_eval.$B;
+  var block = rb_mod_module_eval.proc;
 
   if (block) {
-    rb_mod_module_eval.$B = null;
+    rb_mod_module_eval.proc = null;
     block(klass, null);
   }
   else {
