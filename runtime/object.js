@@ -582,6 +582,14 @@ function rb_false() {
 
 /**
  * call-seq:
+ *    any_method      -> true
+ */
+function rb_true() {
+  return true;
+}
+
+/**
+ * call-seq:
  *    puts(str)     -> nil
  */
 function rb_obj_puts(obj) {
@@ -789,6 +797,92 @@ function rb_obj_tap(obj) {
   return obj;
 }
 
+/**
+ * call-seq:
+ *    nil == other    -> true or false
+ */
+function rb_nil_equal(nil, mid, other) {
+  return other == null;
+}
+
+/**
+ * call-seq:
+ *    nil.to_i      -> 0
+ */
+function rb_nil_to_i() {
+  return 0;
+}
+
+/**
+ * call-seq:
+ *    nil.to_f    -> 0.0
+ */
+function rb_nil_to_f() {
+  return 0.0;
+}
+
+/**
+ * call-seq:
+ *    nil.to_s    -> ""
+ */
+function rb_nil_to_s() {
+  return "";
+}
+
+/**
+ * call-seq:
+ *    nil.to_a    -> []
+ */
+function rb_nil_to_a() {
+  return [];
+}
+
+/**
+ * call-seq:
+ *    nil.inspect     -> "nil"
+ */
+function rb_nil_inspect() {
+  return "nil";
+}
+
+/**
+ * call-seq:
+ *    nil.class     -> NilClass
+ *
+ * Special override for nilclass as the normal lookup assumes we have a real
+ * object, which null isnt.
+ */
+function rb_nil_class() {
+  return rb_cNilClass;
+}
+
+/**
+ * call-seq:
+ *    false & obj     -> false
+ *    nil & obj       -> false
+ */
+function rb_false_and() {
+  return false;
+}
+
+/**
+ * call-seq:
+ *    false | obj     -> true or false
+ *    nil | obj       -> true or false
+ */
+function rb_false_or(obj, mid, obj2) {
+  return obj2 === false || obj2 == null ? false : true;
+}
+
+/**
+ * call-seq:
+ *    false ^ obj     -> true or false
+ *    nil ^ obj       -> true or false
+ */
+function rb_false_xor(obj, mid, obj2) {
+  return obj2 === false || obj2 == null ? false : true;
+}
+
 function Init_Object() {
   var metaclass;
 
@@ -924,4 +1018,20 @@ function Init_Object() {
   rb_define_method(rb_cClass, "inherited", rb_obj_dummy);
   rb_define_method(rb_cClass, "superclass", rb_class_superclass);
   rb_define_method(rb_cClass, "from_native", rb_class_from_native);
+
+  rb_cNilClass = rb_define_class("NilClass", rb_cObject);
+  Rt.NC = NilObj = rb_obj_alloc(rb_cNilClass);
+  Qnil = null;
+
+  rb_define_method(rb_cNilClass, "nil?", rb_true);
+  rb_define_method(rb_cNilClass, "==", rb_nil_equal);
+  rb_define_method(rb_cNilClass, "to_i", rb_nil_to_i);
+  rb_define_method(rb_cNilClass, "to_f", rb_nil_to_f);
+  rb_define_method(rb_cNilClass, "to_a", rb_nil_to_a);
+  rb_define_method(rb_cNilClass, "to_s", rb_nil_to_s);
+  rb_define_method(rb_cNilClass, "inspect", rb_nil_inspect);
+  rb_define_method(rb_cNilClass, "&", rb_false_and);
+  rb_define_method(rb_cNilClass, "|", rb_false_or);
+  rb_define_method(rb_cNilClass, "^", rb_false_xor);
+  rb_define_method(rb_cNilClass, "class", rb_nil_class);
 }
