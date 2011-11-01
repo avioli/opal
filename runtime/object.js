@@ -883,6 +883,54 @@ function rb_false_xor(obj, mid, obj2) {
   return obj2 === false || obj2 == null ? false : true;
 }
 
+/**
+ * call-seq
+ *    true.to_s     -> "true"
+ *    false.to_s    -> "false"
+ *
+ * Special override for Boolean class that actually represents both
+ * true and false.
+ */
+function rb_bool_to_s(bool) {
+  return bool ? "true" : "false";
+}
+
+/**
+ * call-seq:
+ *    true == obj     -> true or false
+ *    false == obj    -> true or false
+ *
+ * Special overide for Boolean.
+ */
+function rb_bool_equal(bool, mid, other) {
+  return bool === other;
+}
+
+/**
+ * call-seq:
+ *    true.class    -> TrueClass
+ *    false.class   -> FalseClass
+ */
+function rb_bool_class(bool) {
+  return bool ? rb_cTrueClass : rb_cFalseClass;
+}
+
+/**
+ * call-seq:
+ *    TrueClass === obj     -> true or false
+ */
+function rb_true_eqq(cls, mid, obj) {
+  return obj === true;
+}
+
+/**
+ * call-seq:
+ *    FalseClass === obj    -> true or false
+ */
+function rb_false_eqq(cls, mid, obj) {
+  return obj === false;
+}
+
 function Init_Object() {
   var metaclass;
 
@@ -1034,4 +1082,17 @@ function Init_Object() {
   rb_define_method(rb_cNilClass, "|", rb_false_or);
   rb_define_method(rb_cNilClass, "^", rb_false_xor);
   rb_define_method(rb_cNilClass, "class", rb_nil_class);
+
+  rb_cBoolean = rb_bridge_class(Boolean.prototype,
+                                T_OBJECT | T_BOOLEAN, "Boolean", rb_cObject);
+
+  rb_define_method(rb_cBoolean, "to_s", rb_bool_to_s);
+  rb_define_method(rb_cBoolean, "==", rb_bool_equal);
+  rb_define_method(rb_cBoolean, "class", rb_bool_class);
+
+  rb_cTrueClass = rb_define_class("TrueClass", rb_cObject);
+  rb_define_singleton_method(rb_cTrueClass, "===", rb_true_eqq);
+
+  rb_cFalseClass = rb_define_class("FalseClass", rb_cObject);
+  rb_define_singleton_method(rb_cFalseClass, "===", rb_false_eqq);
 }

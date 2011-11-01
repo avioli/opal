@@ -471,10 +471,6 @@ function init() {
 
   Rt.Object = rb_cObject;
 
-  rb_cNilClass = rb_define_class('NilClass', rb_cObject);
-  Rt.NC = NilObj = new RObject(rb_cNilClass);
-  Qnil = null;
-
   rb_cBoolean = rb_bridge_class(Boolean.prototype, T_OBJECT | T_BOOLEAN, 'Boolean', rb_cObject);
 
   Init_Array();
