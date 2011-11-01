@@ -362,7 +362,456 @@ function rb_obj_method_missing(obj, mid, sym) {
            + (obj == null ? NilObj : obj).$m.inspect(obj, "inspect"));
 }
 
+/**
+ * call-seq:
+ *    obj.methds                  -> ary
+ *    obj.private_methods         -> ary
+ *    obj.protected_methods       -> ary
+ *    obj.public_methods          -> ary
+ */
+function rb_obj_methods(obj) {
+  return obj.$klass.methods;
+}
+
+/**
+ * call-seq:
+ *    Array(obj)    -> array
+ */
+function rb_f_array(obj) {
+  if (obj == undefined) {
+    return [];
+  }
+
+  if (obj.$flags & T_ARRAY) {
+    return obj;
+  }
+
+  return obj.$m.to_a(obj, "to_a");
+}
+
+/**
+ * call-seq:
+ *    String(obj)     -> string
+ */
+function rb_f_string(obj) {
+  return (obj == null ? NilObj : obj).$m.to_s(obj, "to_s");
+}
+
+/**
+ * call-seq:
+ *    obj.__callee__    -> object
+ */
+function rb_obj_callee(obj) {
+  rb_raise(rb_eNotImplementedError, "Kernel#__callee__");
+}
+
+/**
+ * call-seq:
+ *    obj.__flags__     -> number
+ */
+function rb_obj_flags(obj) {
+  return obj.$flags;
+}
+
+/**
+ * call-seq:
+ *    obj.__id__    -> number
+ */
+function rb_obj_id(obj) {
+  return obj.$id;
+}
+
+/**
+ * call-seq:
+ *    `some code`     -> nil
+ */
+function rb_obj_xstring() {
+  rb_raise(rb_eNotImplementedError, "Kernel#`");
+}
+
+/**
+ * call-seq:
+ *    obj =~ other    -> nil
+ */
+function rb_obj_match(obj, other) {
+  return null;
+}
+
+/**
+ * call-seq:
+ *    obj.class     -> class
+ */
+function rb_obj_class(obj) {
+  return rb_class_real(obj.$klass);
+}
+
+/**
+ * call-seq:
+ *    obj.singleton_class     -> class
+ */
+function rb_obj_singleton_class(obj) {
+  return rb_singleton_class(obj);
+}
+
+/**
+ * call-seq:
+ *    obj.clone     -> an_object
+ */
+function rb_obj_clone(obj) {
+  var clone = rb_obj_alloc(rb_obj_class(obj));
+
+  for (var ivar in obj) {
+    clone[ivar] = obj[ivar];
+  }
+
+  return clone;
+}
+
+/**
+ * call-seq:
+ *    obj.define_singleton_method(name, &block)     -> nil
+ */
+function rb_obj_define_singleton_method(obj, mid, name) {
+  var block = rb_obj_define_singleton_method.proc;
+
+  if (!block) {
+    rb_raise(rb_eLocalJumpError, "no block given");
+  }
+
+  rb_obj_define_singleton_method.proc = null;
+
+  rb_define_singleton_method(obj, name, block);
+
+  return null;
+}
+
+/**
+ * call-seq:
+ *    obj.extend(*mods)   -> obj
+ */
+function rb_obj_extend(obj) {
+  var mods = ArraySlice.call(arguments, 2);
+
+  for (var i = 0, ii = mods.length; i < ii; i++) {
+    rb_extend_module(rb_singleton_class(obj), mods[i]);
+  }
+
+  return obj;
+}
+
+/**
+ * call-seq:
+ *    obj.instance_variable_defined?(sym)     -> true or false
+ */
+function rb_obj_ivar_defined(obj, mid, name) {
+  return obj.hasOwnProperty(name.substr(1));
+}
+
+/**
+ * call-seq:
+ *    obj.instance_variable_get(name)       -> an_object
+ */
+function rb_obj_ivar_get(obj, mid, name) {
+  return obj[name.substr(1)];
+}
+
+/**
+ * call-seq:
+ *    obj.instance_variable_set(name, value)    -> value
+ */
+function rb_obj_ivar_set(obj, mid, name, value) {
+  return obj[name.substr(1)] = value;
+}
+
+/**
+ * call-seq:
+ *    obj.instance_variables    -> ary
+ */
+function rb_obj_instance_variables(obj) {
+  var result = [];
+
+  for (var ivar in obj) {
+    result.push(ivar);
+  }
+
+  return result;
+}
+
+/**
+ * call-seq:
+ *    obj.instance_of?(class)     -> true or false
+ */
+function rb_obj_is_instance_of(obj, mid, klass) {
+  return obj.$klass === klass;
+}
+
+/**
+ * call-seq:
+ *    obj.kind_of?(class)       -> true or false
+ *    obj.is_a?(class)          -> true or false
+ */
+function rb_obj_is_kind_of(obj, mid, klass) {
+  var test = obj.$klass;
+
+  while (test) {
+    if (test === klass) {
+      return true;
+    }
+
+    test = test.$super;
+  }
+
+  return false;
+}
+
+/**
+ * call-seq:
+ *    obj.method(sym)     -> method
+ */
+function rb_obj_method(obj, mid, method) {
+  return obj.$m[method];
+}
+
+/**
+ * call-seq:
+ *    any_method      -> false
+ */
+function rb_false() {
+  return false;
+}
+
+/**
+ * call-seq:
+ *    puts(str)     -> nil
+ */
+function rb_obj_puts(obj) {
+  var args = ArraySlice.call(arguments, 2);
+  return rb_stdout.$m.puts.apply(null, [rb_stdout, "null"].concat(args));
+}
+
+/**
+ * call-seq:
+ *    print(str)    -> nil
+ */
+function rb_obj_print(obj) {
+  var args = ArraySlice.call(arguments, 2);
+  return rb_stdout.$m.print.apply(null, [rb_stdout, "null"].concat(args));
+}
+
+/**
+ * call-seq:
+ *    obj.respond_to?(sym)    -> true or false
+ */
+function rb_obj_respond_to(obj, mid, name) {
+  var method = (obj == null ? NilObj : obj).$m[name];
+
+  if (method && !method.$mm) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * call-seq:
+ *    obj === other     -> true or false
+ */
+function rb_equal(obj, mid, obj2) {
+  return obj === obj2;
+}
+
+/**
+ * call-seq:
+ *    rand      -> num
+ */
+function rb_obj_rand(obj, mid, max) {
+  if (max === undefined) {
+    return Math.random();
+  }
+  else {
+    return Math.floor(Math.random() * max);
+  }
+}
+
+/**
+ * call-seq:
+ *    obj.to_s      -> string
+ */
+function rb_obj_to_s(obj) {
+  return "#<" + rb_class_real(obj.$klass) + ":0x" + (obj.$id * 400487).toString(16) + ">";
+}
+
+/**
+ * call-seq:
+ *    obj.inspect     -> string
+ */
+function rb_obj_inspect(obj) {
+  return obj.$m.to_s(obj, "to_s");
+}
+
+/**
+ * call-seq:
+ *    obj.const_set(sym, obj)     -> obj
+ */
+function rb_obj_const_set(obj, mid, name, value) {
+  return rb_const_set(rb_class_real(obj.$klass), name, value);
+}
+
+/**
+ * call-seq:
+ *    obj.const_defined?(name)    -> true or false
+ */
+function rb_obj_const_defined(obj, mid, name) {
+  return false;
+}
+
+/**
+ * call-seq:
+ *    raise(err)
+ *    fail(err)
+ */
+function rb_obj_raise(obj, mid, exception, string) {
+  var msg, exc;
+
+  if (typeof(exception) === 'string') {
+    msg = exception;
+    exc = rb_obj_alloc(rb_eRuntimeError);
+    exc.message = msg;
+  }
+  else if (rb_obj_is_kind_of(exception, null, rb_eException)) {
+    exc = exception;
+  }
+  else {
+    if (string !== undefined) {
+      msg = string;
+    }
+
+    exc = rb_obj_alloc(exception);
+    exc.message = msg;
+  }
+
+  rb_raise_exc(exc);
+}
+
+/**
+ * call-seq:
+ *    require(path)     -> true or false
+ */
+function rb_obj_require(obj, mid, path) {
+  return rb_require(path);
+}
+
+/**
+ * call-seq:
+ *    loop do; end    -> obj
+ */
+function rb_obj_loop(obj) {
+  var block = rb_obj_loop.proc;
+
+  if (!block) {
+    return obj;
+  }
+
+  rb_obj_loop.proc = null;
+  var yself = block.self;
+
+  while (true) {
+    block(yself, null);
+  }
+
+  return obj;
+}
+
+/**
+ * call-seq:
+ *    at_exit {}    -> proc
+ */
+function rb_obj_at_exit() {
+  var block = rb_obj_at_exit.proc;
+
+  if (!block) {
+    rb_raise(rb_eArgError, "called without a block");
+  }
+
+  rb_obj_at_exit.proc = null;
+  rb_end_procs.push(block);
+
+  return block;
+}
+
+/**
+ * call-seq:
+ *    proc {}     -> proc
+ */
+function rb_obj_proc() {
+  var block = rb_obj_proc.proc;
+
+  if (!block) {
+    rb_raise(rb_eArgError, "tried to create Proc object without a block");
+  }
+
+  rb_obj_proc.proc = null;
+
+  return block;
+}
+
+/**
+ * call-seq:
+ *    lambda {}     -> proc
+ */
+function rb_obj_lambda() {
+  var block = rb_obj_lambda.proc;
+
+  if (!block) {
+    rb_raise(rb_eArgError, "tried to create Proc object without a block");
+  }
+
+  rb_obj_lambda.proc = null;
+
+  return rb_make_lambda(block);
+}
+
+/**
+ * call-seq:
+ *    tap {}    -> obj
+ */
+function rb_obj_tap(obj) {
+  var block = rb_obj_tap.proc;
+
+  if (!block) {
+    rb_raise(rb_eArgError, "no block given");
+  }
+
+  rb_obj_tap.proc = null;
+
+  block(block.self, null, obj);
+
+  return obj;
+}
+
 function Init_Object() {
+  var metaclass;
+
+  rb_cBasicObject = boot_defrootclass('BasicObject');
+  rb_cObject      = boot_defclass('Object', rb_cBasicObject);
+  rb_cModule      = boot_defclass('Module', rb_cObject);
+  rb_cClass       = boot_defclass('Class',  rb_cModule);
+
+  rb_const_set(rb_cObject, 'BasicObject', rb_cBasicObject);
+
+  metaclass = rb_make_metaclass(rb_cBasicObject, rb_cClass);
+  metaclass = rb_make_metaclass(rb_cObject, metaclass);
+  metaclass = rb_make_metaclass(rb_cModule, metaclass);
+  metaclass = rb_make_metaclass(rb_cClass, metaclass);
+
+  rb_boot_defmetametaclass(rb_cModule, metaclass);
+  rb_boot_defmetametaclass(rb_cObject, metaclass);
+  rb_boot_defmetametaclass(rb_cBasicObject, metaclass);
+
+  rb_mKernel      = rb_define_module('Kernel');
+
+  rb_include_module(rb_cObject, rb_mKernel);
+
   rb_define_method(rb_cBasicObject, "initialize", rb_obj_dummy);
   rb_define_method(rb_cBasicObject, "==", rb_obj_equal);
   rb_define_method(rb_cBasicObject, "eql?", rb_obj_equal);
@@ -376,6 +825,70 @@ function Init_Object() {
   rb_define_method(rb_cBasicObject, "singleton_method_added", rb_obj_dummy);
   rb_define_method(rb_cBasicObject, "singleton_method_removed", rb_obj_dummy);
   rb_define_method(rb_cBasicObject, "singleton_method_undefined", rb_obj_dummy);
+
+  rb_define_method(rb_cObject, "methods", rb_obj_methods);
+  rb_define_method(rb_cObject, "private_methods", rb_obj_methods);
+  rb_define_method(rb_cObject, "protected_methods", rb_obj_methods);
+  rb_define_method(rb_cObject, "public_methods", rb_obj_methods);
+
+  rb_define_method(rb_mKernel, "Array", rb_f_array);
+  rb_define_method(rb_mKernel, "String", rb_f_string);
+
+  rb_define_method(rb_mKernel, "to_s", rb_obj_to_s);
+  rb_define_method(rb_mKernel, "inspect", rb_obj_inspect);
+
+  rb_define_method(rb_mKernel, "__callee__", rb_obj_callee);
+  rb_define_method(rb_mKernel, "__method__", rb_obj_callee);
+  rb_define_method(rb_mKernel, "__flags__", rb_obj_flags);
+  rb_define_method(rb_mKernel, "__id__", rb_obj_id);
+  rb_define_method(rb_mKernel, "object_id", rb_obj_id);
+  rb_define_method(rb_mKernel, "hash", rb_obj_id);
+
+  rb_define_method(rb_mKernel, "`", rb_obj_xstring);
+  rb_define_method(rb_mKernel, "=~", rb_obj_match);
+  rb_define_method(rb_mKernel, "nil?", rb_false);
+
+  rb_define_method(rb_mKernel, "class", rb_obj_class);
+  rb_define_method(rb_mKernel, "singleton_class", rb_obj_singleton_class);
+  rb_define_method(rb_mKernel, "clone", rb_obj_clone);
+  rb_define_method(rb_mKernel, "dup", rb_obj_clone);
+
+  rb_define_method(rb_mKernel, "define_singleton_method", rb_obj_define_singleton_method);
+  rb_define_method(rb_mKernel, "extend", rb_obj_extend);
+
+  rb_define_method(rb_mKernel, "instance_variable_defined?", rb_obj_ivar_defined);
+  rb_define_method(rb_mKernel, "instance_variable_get", rb_obj_ivar_get);
+  rb_define_method(rb_mKernel, "instance_variable_set", rb_obj_ivar_set);
+  rb_define_method(rb_mKernel, "instance_variables", rb_obj_instance_variables);
+
+  rb_define_method(rb_mKernel, "instance_of?", rb_obj_is_instance_of);
+  rb_define_method(rb_mKernel, "kind_of?", rb_obj_is_kind_of);
+  rb_define_method(rb_mKernel, "is_a?", rb_obj_is_kind_of);
+
+  rb_define_method(rb_mKernel, "method", rb_obj_method);
+  rb_define_method(rb_mKernel, "public_method", rb_obj_method);
+
+  rb_define_method(rb_mKernel, "puts", rb_obj_puts);
+  rb_define_method(rb_mKernel, "print", rb_obj_print);
+
+  rb_define_method(rb_mKernel, "raise", rb_obj_raise);
+  rb_define_method(rb_mKernel, "fail", rb_obj_raise);
+
+  rb_define_method(rb_mKernel, "require", rb_obj_require);
+  rb_define_method(rb_mKernel, "loop", rb_obj_loop);
+
+  rb_define_method(rb_mKernel, "at_exit", rb_obj_at_exit);
+  rb_define_method(rb_mKernel, "proc", rb_obj_proc);
+  rb_define_method(rb_mKernel, "lambda", rb_obj_lambda);
+  rb_define_method(rb_mKernel, "tap", rb_obj_tap);
+
+  rb_define_method(rb_mKernel, "respond_to?", rb_obj_respond_to);
+  rb_define_method(rb_mKernel, "===", rb_equal);
+  rb_define_method(rb_mKernel, "send", rb_obj_send);
+  rb_define_method(rb_mKernel, "rand", rb_obj_rand);
+
+  rb_define_method(rb_mKernel, "const_set", rb_obj_const_set);
+  rb_define_method(rb_mKernel, "const_defined?", rb_obj_const_defined);
 
   rb_define_singleton_method(rb_cModule, "constants", rb_mod_constants);
   rb_define_singleton_method(rb_cModule, "nesting", rb_mod_nesting);

@@ -491,29 +491,10 @@ var puts = function(str) {
   all the core objects and classes and required runtime features.
 */
 function init() {
-  var metaclass;
-
-  rb_cBasicObject = boot_defrootclass('BasicObject');
-  rb_cObject      = boot_defclass('Object', rb_cBasicObject);
-  rb_cModule      = boot_defclass('Module', rb_cObject);
-  rb_cClass       = boot_defclass('Class',  rb_cModule);
-
-  rb_const_set(rb_cObject, 'BasicObject', rb_cBasicObject);
-
-  metaclass = rb_make_metaclass(rb_cBasicObject, rb_cClass);
-  metaclass = rb_make_metaclass(rb_cObject, metaclass);
-  metaclass = rb_make_metaclass(rb_cModule, metaclass);
-  metaclass = rb_make_metaclass(rb_cClass, metaclass);
-
-  rb_boot_defmetametaclass(rb_cModule, metaclass);
-  rb_boot_defmetametaclass(rb_cObject, metaclass);
-  rb_boot_defmetametaclass(rb_cBasicObject, metaclass);
-
   Init_Object();
 
   Rt.Object = rb_cObject;
 
-  rb_mKernel      = rb_define_module('Kernel');
 
   rb_top_self     = new RObject(rb_cObject);
   Rt.top          = rb_top_self;
@@ -612,10 +593,6 @@ function init() {
   rb_const_set(rb_cObject, 'RUBY_PLATFORM', PLATFORM_PLATFORM);
   rb_const_set(rb_cObject, 'RUBY_VERSION', PLATFORM_VERSION);
   rb_const_set(rb_cObject, 'ARGV', PLATFORM_ARGV);
-
-  // puts = function(str) {
-    // rb_stdout.m$puts(str);
-  // };
 
   // only load corelib if defined (in browser). Corelib is loaded seperately
   // in gem session.
