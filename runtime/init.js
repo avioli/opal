@@ -389,31 +389,6 @@ function rb_stdio_setter(id, value) {
   }
 };
 
-var rb_string_inspect = Rt.si = function(self) {
-  /* borrowed from json2.js, see file for license */
-    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-
-    escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-
-    meta = {
-      '\b': '\\b',
-      '\t': '\\t',
-      '\n': '\\n',
-      '\f': '\\f',
-      '\r': '\\r',
-      '"' : '\\"',
-      '\\': '\\\\'
-    };
-
-    escapable.lastIndex = 0;
-
-    return escapable.test(self) ? '"' + self.replace(escapable, function (a) {
-      var c = meta[a];
-      return typeof c === 'string' ? c :
-        '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-      }) + '"' : '"' + self + '"';
-};
-
 var rb_cProc;
 
 /**
@@ -508,11 +483,6 @@ function init() {
 
   rb_cNumeric = rb_bridge_class(Number.prototype,
     T_OBJECT | T_NUMBER, 'Numeric', rb_cObject);
-
-  rb_cString = rb_bridge_class(String.prototype,
-    T_OBJECT | T_STRING, 'String', rb_cObject);
-
-  rb_cSymbol = rb_define_class("Symbol", rb_cObject);
 
   Init_String();
 
