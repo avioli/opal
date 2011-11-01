@@ -1,9 +1,4 @@
-enumerable
-comparable
-enumerator
 numeric
-rational
-complex
 hash
 error
 proc

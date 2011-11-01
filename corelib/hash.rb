@@ -1,5 +1,4 @@
 class Hash
-  include Enumerable
 
   def self.[](*args)
     `$rb.H.apply(null, args)`
