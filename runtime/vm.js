@@ -220,3 +220,26 @@ VM.B = function(value) {
   rb_raise_exc(rb_eBreakInstance);
 };
 
+/**
+ * call-seq:
+ *    to_s    -> "main"
+ */
+function rb_main_to_s() {
+  return "main";
+}
+
+/**
+ * call-seq:
+ *    include(mod)   -> obj
+ */
+function rb_main_include(obj, mid, mod) {
+  rb_include_module(rb_cObject, mod);
+}
+
+function Init_VM() {
+  rb_top_self = rb_obj_alloc(rb_cObject);
+  Rt.top      = rb_top_self;
+
+  rb_define_singleton_method(rb_top_self, "to_s", rb_main_to_s);
+  rb_define_singleton_method(rb_top_self, "include", rb_main_include);
+}

@@ -492,12 +492,9 @@ var puts = function(str) {
 */
 function init() {
   Init_Object();
+  Init_VM();
 
   Rt.Object = rb_cObject;
-
-
-  rb_top_self     = new RObject(rb_cObject);
-  Rt.top          = rb_top_self;
 
   rb_cNilClass = rb_define_class('NilClass', rb_cObject);
   Rt.NC = NilObj = new RObject(rb_cNilClass);

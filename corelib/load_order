@@ -1,5 +1,3 @@
-native_object
-top_self
 string
 symbol
 nil_class
