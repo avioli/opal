@@ -1,8 +1,4 @@
 class Numeric
-  def self.allocate
-    raise RuntimeError, 'cannot instantiate instance of Numeric class'
-  end
-
   def +(other)
     `self + other`
   end

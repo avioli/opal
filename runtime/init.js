@@ -477,8 +477,7 @@ function init() {
 
   rb_cHash = rb_define_class('Hash', rb_cObject);
 
-  rb_cNumeric = rb_bridge_class(Number.prototype,
-    T_OBJECT | T_NUMBER, 'Numeric', rb_cObject);
+  Init_Numeric();
 
   Init_String();
 
