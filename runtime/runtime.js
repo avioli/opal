@@ -336,3 +336,345 @@ Rt.do_at_exit = function() {
   });
 };
 
+/**
+  Sets the constant value `val` on the given `klass` as `id`.
+
+  @param {RClass} klass
+  @param {String} id
+  @param {Object} val
+  @return {Object} returns the set value
+*/
+function rb_const_set(klass, id, val) {
+  klass.$c[id] = val;
+  return val;
+}
+
+/**
+  Lookup a constant named `id` on the `klass`. This will throw an error if
+  the constant cannot be found.
+
+  @param {RClass} klass
+  @param {String} id
+*/
+function rb_const_get(klass, id) {
+  if (klass.$c[id]) {
+    return (klass.$c[id]);
+  }
+
+  var parent = klass.$parent;
+
+  while (parent) {
+    if (parent.$c[id] !== undefined) {
+      return parent.$c[id];
+    }
+
+    parent = parent.$parent;
+  }
+
+  rb_raise(rb_eNameError, 'uninitialized constant ' + id);
+};
+
+Rt.const_get = rb_const_get;
+
+/**
+  Returns true or false depending whether a constant named `id` is defined
+  on the receiver `klass`.
+
+  @param {RClass} klass
+  @param {String} id
+  @return {true, false}
+*/
+function rb_const_defined(klass, id) {
+  if (klass.$c[id]) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+  This table holds all the global variables accessible from ruby.
+
+  Entries are mapped by their global id => an object that contains the
+  given keys:
+
+    - name
+    - value
+    - getter
+    - setter
+*/
+var rb_global_tbl = {};
+
+/**
+  Expose global getters to runtime. If no getter, then gvar isnt defined.
+*/
+var rb_gvar_getters = Rt.gv = {};
+
+/**
+  Defines a hooked/global variable.
+
+  @param {String} name The global name (e.g. '$:')
+  @param {Function} getter The getter function to return the variable
+  @param {Function} setter The setter function used for setting the var
+  @return {null}
+*/
+function rb_define_hooked_variable(name, getter, setter) {
+  var entry = {
+    "name": name,
+    "value": Qnil,
+    "getter": getter,
+    "setter": setter
+  };
+
+  rb_global_tbl[name] = entry;
+  rb_gvar_getters[name] = getter;
+};
+
+/**
+  A default read only getter for a global variable. This will simply throw a
+  name error with the given id. This can be used for variables that should
+  not be altered.
+*/
+function rb_gvar_readonly_setter(id, value) {
+  rb_raise(rb_eNameError, id + " is a read-only variable");
+};
+
+/**
+  Retrieve a global variable. This will use the assigned getter.
+*/
+function rb_gvar_get(id) {
+  var entry = rb_global_tbl[id];
+  if (!entry) { return Qnil; }
+  return entry.getter(id);
+};
+
+/**
+  Set a global. If not already set, then we assign basic getters and setters.
+*/
+function rb_gvar_set(id, value) {
+  var entry = rb_global_tbl[id];
+  if (entry)  { return entry.setter(id, value); }
+
+  rb_define_hooked_variable(id,
+
+    function(id) {
+      return rb_global_tbl[id].value;
+    },
+
+    function(id, value) {
+      return (rb_global_tbl[id].value = value);
+    }
+  );
+
+  return rb_gvar_set(id, value);
+};
+
+/**
+  Every object has a unique id. This count is used as the next id for the
+  next created object. Therefore, first ruby object has id 0, next has 1 etc.
+*/
+var rb_hash_yield = 0;
+
+/**
+  Yield the next object id, updating the count, and returning it.
+*/
+function rb_yield_hash() {
+  return rb_hash_yield++;
+};
+
+var rb_cHash;
+
+/**
+  Returns a new hash with values passed from the runtime.
+*/
+Rt.H = function() {
+  var hash = new RObject(rb_cHash), k, v, args = ArraySlice.call(arguments);
+  var keys = hash.k = [];
+  var assocs = hash.a = {};
+  hash.d = Qnil;
+  hash.df = Qnil;
+
+  for (var i = 0, ii = args.length; i < ii; i++) {
+    k = args[i];
+    v = args[i + 1];
+    i++;
+    keys.push(k);
+    assocs[(k == null ? NilClassProto : k).$m.hash(k, 'hash')] = v;
+  }
+
+  return hash;
+};
+
+var rb_alias_method = Rt.alias_method = function(klass, new_name, old_name) {
+  var body = klass.$m_tbl[old_name];
+
+  if (!body) {
+    console.log("cannot alias " + new_name + " to " + old_name);
+    rb_raise(rb_eNameError, "undefined method `" + old_name + "' for class `" + klass.__classid__ + "'");
+  }
+
+  rb_define_raw_method(klass, new_name, body);
+  return Qnil;
+};
+
+/**
+  This does the main work, but does not call runtime methods like
+  singleton_method_added etc. define_method does that.
+
+*/
+function rb_define_raw_method(klass, name, body) {
+
+  klass.$m_tbl[name] = body;
+  klass.$method_table[name] = body;
+
+  var included_in = klass.$included_in, includee;
+
+  if (included_in) {
+    for (var i = 0, ii = included_in.length; i < ii; i++) {
+      includee = included_in[i];
+
+      rb_define_raw_method(includee, name, body);
+    }
+  }
+};
+
+function rb_define_alias(base, new_name, old_name) {
+  rb_define_method(base, new_name, base.$m_tbl[old_name]);
+  return Qnil;
+};
+
+
+
+/**
+  Get global by id
+*/
+Rt.gg = function(id) {
+  return rb_gvar_get(id);
+};
+
+/**
+  Set global by id
+*/
+Rt.gs = function(id, value) {
+  return rb_gvar_set(id, value);
+};
+
+function rb_regexp_match_getter(id) {
+  var matched = Rt.X;
+
+  if (matched) {
+    if (matched.$md) {
+      return matched.$md;
+    } else {
+      var res = new rb_cMatch.o$a();
+      res.$data = matched;
+      matched.$md = res;
+      return res;
+    }
+  } else {
+    return Qnil;
+  }
+}
+
+var rb_cIO, rb_stdin, rb_stdout, rb_stderr;
+
+function rb_stdio_getter(id) {
+  switch (id) {
+    case "$stdout":
+      return rb_stdout;
+    case "$stdin":
+      return rb_stdin;
+    case "$stderr":
+      return rb_stderr;
+    default:
+      rb_raise(rb_eRuntimeError, "stdout_setter being used for bad variable");
+  }
+};
+
+function rb_stdio_setter(id, value) {
+  rb_raise(rb_eException, "stdio_setter cannot currently set stdio variables");
+
+  switch (id) {
+    case "$stdout":
+      return rb_stdout = value;
+    case "$stdin":
+      return rb_stdin = value;
+    case "$stderr":
+      return rb_stderr = value;
+    default:
+      rb_raise(rb_eRuntimeError, "stdout_setter being used for bad variable: " + id);
+  }
+};
+
+var rb_cProc;
+
+/**
+  Block passing - holds current block for runtime
+
+  f: function
+  p: proc
+  y: yield error
+*/
+var rb_block = Rt.P = function() {
+  rb_raise(rb_eLocalJumpError, "no block given");
+};
+
+rb_block.$self = Qnil;
+
+/**
+  Turns the given proc/function into a lambda. This is useful for the
+  Proc#lambda method, but also for blocks that are turned into
+  methods, in Module#define_method, for example. Lambdas and methods
+  from blocks are the same thing. Lambdas basically wrap the passed
+  block function and perform stricter arg checking to make sure the
+  right number of args are passed. Procs are liberal in their arg
+  checking, and simply turned ommited args into nil. Lambdas and
+  methods MUST check args and throw an error if the wrong number are
+  given. Also, lambdas/methods must catch return statements as lambdas
+  capture returns.
+
+  FIXME: wrap must detect if we are the receiver of a block, and fix
+  the block to send it to the proc.
+
+  FIXME: need to be strict on checking proc arity
+
+  FIXME: need to catch return statements which may be thrown.
+
+  @param {Function} proc The proc/function to lambdafy.
+  @return {Function} Wrapped lambda function.
+*/
+function rb_make_lambda(proc) {
+  if (proc.$lambda) return proc;
+
+  var wrap = function() {
+    var args = Array.prototype.slice.call(arguments, 0);
+    return proc.apply(null, args);
+  };
+
+  wrap.$lambda = true;
+  wrap.o$s = proc.o$s;
+
+  return proc;
+};
+
+var rb_cRange;
+
+/**
+  Returns a new ruby range. G for ranGe.
+*/
+Rt.G = function(beg, end, exc) {
+  var range = new RObject(rb_cRange);
+  range.begin = beg;
+  range.end = end;
+  range.exclude = exc;
+  return range;
+};
+
+/**
+  Print to console - this is overriden upon init so that it will print to
+  stdout
+*/
+var puts = function(str) {
+  console.log(str);
+};
+
