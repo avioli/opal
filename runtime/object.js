@@ -675,34 +675,6 @@ function rb_obj_const_defined(obj, mid, name) {
 
 /**
  * call-seq:
- *    raise(err)
- *    fail(err)
- */
-function rb_obj_raise(obj, mid, exception, string) {
-  var msg, exc;
-
-  if (typeof(exception) === 'string') {
-    msg = exception;
-    exc = rb_obj_alloc(rb_eRuntimeError);
-    exc.message = msg;
-  }
-  else if (rb_obj_is_kind_of(exception, null, rb_eException)) {
-    exc = exception;
-  }
-  else {
-    if (string !== undefined) {
-      msg = string;
-    }
-
-    exc = rb_obj_alloc(exception);
-    exc.message = msg;
-  }
-
-  rb_raise_exc(exc);
-}
-
-/**
- * call-seq:
  *    require(path)     -> true or false
  */
 function rb_obj_require(obj, mid, path) {
@@ -1012,9 +984,6 @@ function Init_Object() {
 
   rb_define_method(rb_mKernel, "puts", rb_obj_puts);
   rb_define_method(rb_mKernel, "print", rb_obj_print);
-
-  rb_define_method(rb_mKernel, "raise", rb_obj_raise);
-  rb_define_method(rb_mKernel, "fail", rb_obj_raise);
 
   rb_define_method(rb_mKernel, "require", rb_obj_require);
   rb_define_method(rb_mKernel, "loop", rb_obj_loop);

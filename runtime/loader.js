@@ -112,7 +112,7 @@ Op.run = function(body) {
   }
   catch (err) {
     console.log(err.$klass.__classid__ + ": " + err.message);
-    var backtrace = rb_backtrace_extra(err);
+    var backtrace = exc_awesome_backtrace(err);
 
     console.log("\t" + backtrace.join("\n\t"));
   }

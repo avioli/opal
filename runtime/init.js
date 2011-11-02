@@ -206,127 +206,7 @@ function rb_define_alias(base, new_name, old_name) {
   return Qnil;
 };
 
-/**
-  Raise the exception class with the given string message.
-*/
-function rb_raise(exc, str) {
-  if (str === undefined) {
-    str = exc;
-    exc = rb_eException;
-  }
 
-  var exception = exc.$m['new'](exc, "new", str);
-  rb_raise_exc(exception);
-};
-
-Rt.raise = rb_raise;
-
-/**
-  Raise an exception instance (DO NOT pass strings to this)
-*/
-var rb_raise_exc = Rt.raise = function(exc) {
-  throw exc;
-};
-
-function rb_prepare_backtrace(error, stack) {
-  var code = [], f, b, k;
-
-  for (var i = 0; i < stack.length; i++) {
-    f = stack[i];
-    b = f.getFunction();
-
-    if (!(k = b.$rbKlass)) {
-      continue;
-    }
-
-    code.push("from " + f.getFileName() + ":" + f.getLineNumber() + ":in `" + b.$rbName + "'");
-  }
-
-  return code;
-};
-
-Rt.backtrace = function(err) {
-  var old = Error.prepareStackTrace;
-  Error.prepareStackTrace = rb_prepare_backtrace;
-
-  var backtrace = err.stack;
-  Error.prepareStackTrace = old;
-
-  return backtrace;
-};
-
-var rb_backtrace_extra = Rt.awesome_backtrace = function(err) {
-  var old = Error.prepareStackTrace;
-  Error.prepareStackTrace = rb_prepare_awesome_backtrace;
-
-  var backtrace = err.stack;
-  Error.prepareStackTrace = old;
-
-  return backtrace;
-};
-
-function rb_prepare_awesome_backtrace(error, stack) {
-  var code = [], f, b, k;
-
-  for (var i = 0; i < stack.length; i++) {
-    f = stack[i];
-    b = f.getFunction();
-
-    if (!(k = b.$rbKlass)) {
-      continue;
-    }
-
-    if (k.$f & FL_SINGLETON && k .__classname__) {
-      k = k.__classname__  + ".";
-    } else {
-      k = rb_class_real(b.$rbKlass) + "#";
-    }
-
-    code.push("from " + k + b.$rbName + " at " + f.getFileName() + ":" + f.getLineNumber());
-  }
-
-  return code;
-};
-
-/**
-  Exception classes. Some of these are used by runtime so they are here for
-  convenience.
-*/
-var rb_eException,       rb_eStandardError,   rb_eLocalJumpError,  rb_eNameError,
-    rb_eNoMethodError,   rb_eArgError,        rb_eScriptError,     rb_eLoadError,
-    rb_eRuntimeError,    rb_eTypeError,       rb_eIndexError,      rb_eKeyError,
-    rb_eRangeError,      rb_eNotImplementedError;
-
-var rb_eExceptionInstance;
-
-/**
-  Standard jump exceptions to save re-creating them everytime they are needed
-*/
-var rb_eReturnInstance,
-    rb_eBreakInstance,
-    rb_eNextInstance;
-
-/**
-  Ruby break statement with the given value. When no break value is needed, nil
-  should be passed here. An undefined/null value is not valid and will cause an
-  internal error.
-
-  @param {RubyObject} value The break value.
-*/
-Rt.B = function(value) {
-  rb_eBreakInstance.$value = value;
-  rb_raise_exc(eBreakInstance);
-};
-
-/**
-  Ruby return, with the given value. The func is the reference function which
-  represents the method that this statement must return from.
-*/
-Rt.R = function(value, func) {
-  rb_eReturnInstance.$value = value;
-  rb_eReturnInstance.$func = func;
-  throw rb_eReturnInstance;
-};
 
 /**
   Get global by id
@@ -473,8 +353,7 @@ function init() {
 
   Init_Array();
 
-  rb_cHash = rb_define_class('Hash', rb_cObject);
-
+  Init_Hash();
   Init_Numeric();
 
   Init_String();
@@ -490,40 +369,7 @@ function init() {
   rb_cMatch = rb_define_class('MatchData', rb_cObject);
   rb_define_hooked_variable('$~', rb_regexp_match_getter, rb_gvar_readonly_setter);
 
-  rb_eException = rb_bridge_class(Error.prototype,
-    T_OBJECT, 'Exception', rb_cObject);
-
-  // rb_eException.$a.prototype.toString = function() {
-    // return this.$k.__classid__ + ": " + this.message;
-  // };
-
-  rb_eStandardError = rb_define_class("StandardError", rb_eException);
-  rb_eRuntimeError = rb_define_class("RuntimeError", rb_eException);
-  rb_eLocalJumpError = rb_define_class("LocalJumpError", rb_eStandardError);
-  rb_eTypeError = rb_define_class("TypeError", rb_eStandardError);
-
-  rb_eNameError = rb_define_class("NameError", rb_eStandardError);
-  rb_eNoMethodError = rb_define_class('NoMethodError', rb_eNameError);
-  rb_eArgError = rb_define_class('ArgumentError', rb_eStandardError);
-
-  rb_eScriptError = rb_define_class('ScriptError', rb_eException);
-  rb_eLoadError = rb_define_class('LoadError', rb_eScriptError);
-
-  rb_eIndexError = rb_define_class("IndexError", rb_eStandardError);
-  rb_eKeyError = rb_define_class("KeyError", rb_eIndexError);
-  rb_eRangeError = rb_define_class("RangeError", rb_eStandardError);
-
-  rb_eNotImplementedError = rb_define_class("NotImplementedError", rb_eException);
-
-  rb_eBreakInstance = new Error('unexpected break');
-  rb_eBreakInstance.$k = rb_eLocalJumpError;
-  rb_block.b = rb_eBreakInstance;
-
-  rb_eReturnInstance = new Error('unexpected return');
-  rb_eReturnInstance.$k = rb_eLocalJumpError;
-
-  rb_eNextInstance = new Error('unexpected next');
-  rb_eNextInstance.$k = rb_eLocalJumpError;
+  Init_Exception();
 
   rb_cIO = rb_define_class('IO', rb_cObject);
   rb_stdin = new RObject(rb_cIO);
