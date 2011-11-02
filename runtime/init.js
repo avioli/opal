@@ -471,8 +471,6 @@ function init() {
 
   Rt.Object = rb_cObject;
 
-  rb_cBoolean = rb_bridge_class(Boolean.prototype, T_OBJECT | T_BOOLEAN, 'Boolean', rb_cObject);
-
   Init_Array();
 
   rb_cHash = rb_define_class('Hash', rb_cObject);
